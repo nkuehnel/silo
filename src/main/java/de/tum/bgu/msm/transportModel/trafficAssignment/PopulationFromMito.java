@@ -4,7 +4,6 @@ import com.pb.common.matrix.Matrix;
 import de.tum.bgu.msm.SiloUtil;
 import de.tum.bgu.msm.data.MitoHousehold;
 import de.tum.bgu.msm.data.MitoPerson;
-import de.tum.bgu.msm.data.Person;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
@@ -33,24 +32,25 @@ public class PopulationFromMito {
     private TempTimeOfDay tempTimeOfDay;
 
 
-    public PopulationFromMito(double scalingFactor, Matrix autoTravelTime, Matrix transitTravelTime, TrafficAssignmentUtil trafficAssignmentUtil) {
+    public PopulationFromMito(double scalingFactor,  TrafficAssignmentUtil trafficAssignmentUtil) {
 
 
 
         this.scalingFactor = scalingFactor;
-        this.autoTravelTime = autoTravelTime;
+
 
         this.trafficAssignmentUtil = trafficAssignmentUtil;
 
         tempModeChoice = new TempModeChoice();
-        tempModeChoice.readInputData();
+        tempModeChoice.setup();
         tempTimeOfDay = new TempTimeOfDay();
+        tempTimeOfDay.setup();
 
     }
 
-    public Population createPopulationFromMito(Map<Integer, MitoHousehold> households, int[] zones){
+    public Population createPopulationFromMito(Map<Integer, MitoHousehold> households, Matrix autoTravelTime, Matrix transitTravelTime, int[] zones, int year){
 
-
+        this.autoTravelTime = autoTravelTime;
 
         Config matsimConfig = ConfigUtils.createConfig();
         Scenario matsimScenario = ScenarioUtils.createScenario(matsimConfig);
@@ -67,26 +67,16 @@ public class PopulationFromMito {
                 int homeZone = mitoHousehold.getHomeZone();
                 int workZone = zones[SiloUtil.select(zones.length)];
 
-
-
                 int mode = tempModeChoice.selectMode(homeZone, workZone);
 
                 if (SiloUtil.getRandomNumberAsDouble() < scalingFactor && mode == 0){
 
                     org.matsim.api.core.v01.population.Person matsimPerson = matsimPopulationFactory.createPerson(Id.create(mitoPerson.getId(), org.matsim.api.core.v01.population.Person.class));
-
                     matsimPlan = matsimPopulationFactory.createPlan();
-
                     addTripsToWork(homeZone, workZone);
-
-
                     logger.info("person: " + mitoPerson.getId() + " home at " + homeZone + " work at " + workZone);
-
                     matsimPerson.addPlan(matsimPlan);
                     matsimPopulation.addPerson(matsimPerson);
-
-
-
 
                 }
 
@@ -98,7 +88,7 @@ public class PopulationFromMito {
         if (writePopulation){
             new File("C:/models/siloMitoMatsim/output/").mkdir();
             MatsimWriter popWriter = new PopulationWriter(matsimPopulation, matsimNetwork);
-            popWriter.write("C:/models/siloMitoMatsim/output/population"  + ".xml");
+            popWriter.write("C:/models/siloMitoMatsim/output/population" + year  + ".xml");
 
         }
 

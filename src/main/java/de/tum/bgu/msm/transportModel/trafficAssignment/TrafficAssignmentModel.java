@@ -35,6 +35,8 @@ public class TrafficAssignmentModel {
     private int numberOfIterations;
     private int numberOfThreads;
 
+    private PopulationFromMito populationFromMito;
+
     public TrafficAssignmentModel(double scalingFactor, int numberOfIterations, int numberOfThreads) {
 
 
@@ -45,31 +47,28 @@ public class TrafficAssignmentModel {
         this.scalingFactor = scalingFactor;
         this.numberOfThreads = numberOfThreads;
 
+        populationFromMito = new PopulationFromMito(scalingFactor,trafficAssignmentUtil);
+
     }
 
-    public void configureTrafficAssignment(){
+    public void setup(){
         //create config parameters for all the simulation years
-
-
-
-
         configMatsim(numberOfIterations, numberOfThreads);
 
+
     }
 
-    public void loadTrafficAssignment(int year){
+    public void load(int year){
         //configure specific parameters for the simulated years
         matsimConfig.network().setInputFile(networkFile);
 
         matsimScenario = (MutableScenario) ScenarioUtils.loadScenario(matsimConfig);
 
-
-
         matsimConfig.controler().setOutputDirectory("C:/models/siloMitoMatsim/output/" + year);
         matsimConfig.controler().setRunId("trafficAssignment" + year);
 
-        PopulationFromMito populationFromMito = new PopulationFromMito(scalingFactor, autoTravelTimes, transitTravelTimes, trafficAssignmentUtil);
-        matsimPopulation = populationFromMito.createPopulationFromMito(mitoHouseholds, zones);
+
+        matsimPopulation = populationFromMito.createPopulationFromMito(mitoHouseholds,  autoTravelTimes, transitTravelTimes, zones, year);
 
         matsimScenario.setPopulation(matsimPopulation);
 

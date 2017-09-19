@@ -3,14 +3,11 @@ package de.tum.bgu.msm.transportModel;
 import com.pb.common.matrix.Matrix;
 import de.tum.bgu.msm.MitoModel;
 import de.tum.bgu.msm.SiloUtil;
-import de.tum.bgu.msm.container.SiloDataContainer;
 import de.tum.bgu.msm.data.MitoHousehold;
-import de.tum.bgu.msm.data.MitoTrip;
 import de.tum.bgu.msm.io.input.InputFeed;
 import de.tum.bgu.msm.transportModel.trafficAssignment.TrafficAssignmentModel;
 import org.apache.log4j.Logger;
 
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.ResourceBundle;
 
@@ -35,7 +32,7 @@ public class MitoTransportModel implements TransportModelI {
         setBaseDirectory(baseDirectory);
 
         trafficAssignmentModel = new TrafficAssignmentModel(0.5, 10, 16);
-        trafficAssignmentModel.configureTrafficAssignment();
+        trafficAssignmentModel.setup();
 
     }
 
@@ -70,8 +67,7 @@ public class MitoTransportModel implements TransportModelI {
         mito.runModel();
 
         logger.info("  Running traffic assignment for the year " + year);
-        trafficAssignmentModel.loadTrafficAssignment(year);
-
+        trafficAssignmentModel.load(year);
         outputAutoTravelTime = trafficAssignmentModel.runTrafficAssignmentToGetTravelTimeMatrix();
 
     }

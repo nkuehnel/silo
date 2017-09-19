@@ -9,6 +9,8 @@ import org.apache.commons.math3.distribution.EnumeratedIntegerDistribution;
 
 import java.util.Arrays;
 
+//temporary mode choice model, it won't be used when mito trips have selected mode
+
 public class TempModeChoice {
 
     private Matrix autoTravelDistance;
@@ -33,7 +35,7 @@ public class TempModeChoice {
 
     }
 
-    public void readInputData(){
+    public void setup(){
 
         OmxFile file = new OmxFile("C:/models/siloMitoMatsim/input/tdTest.omx");
         file.openReadOnly();
