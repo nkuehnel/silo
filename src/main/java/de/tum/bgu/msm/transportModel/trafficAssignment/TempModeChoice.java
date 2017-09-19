@@ -13,6 +13,7 @@ import java.util.Arrays;
 
 public class TempModeChoice {
 
+    private String trafficAssignmentDirectory;
     private Matrix autoTravelDistance;
 
     //hard coded as a temporary solution
@@ -29,15 +30,13 @@ public class TempModeChoice {
     private float beta_bicycle = -0.07f;
     private float beta_transit = -0.05f;
 
-    public TempModeChoice() {
-
-
-
+    public TempModeChoice(String trafficAssignmentDirectory) {
+        this.trafficAssignmentDirectory = trafficAssignmentDirectory;
     }
 
     public void setup(){
 
-        OmxFile file = new OmxFile("C:/models/siloMitoMatsim/input/tdTest.omx");
+        OmxFile file = new OmxFile(trafficAssignmentDirectory + "input/tdTest.omx");
         file.openReadOnly();
         OmxMatrix matrix = file.getMatrix("mat1");
         autoTravelDistance = SiloUtil.convertOmxToMatrix(matrix);

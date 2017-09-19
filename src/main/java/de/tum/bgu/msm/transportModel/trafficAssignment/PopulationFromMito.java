@@ -22,7 +22,7 @@ import java.util.Map;
 public class PopulationFromMito {
 
     static Logger logger = Logger.getLogger(PopulationFromMito.class);
-
+    private String trafficAssignmentDirectory;
     private PopulationFactory matsimPopulationFactory;
     private TrafficAssignmentUtil trafficAssignmentUtil;
     private Plan matsimPlan;
@@ -32,18 +32,14 @@ public class PopulationFromMito {
     private TempTimeOfDay tempTimeOfDay;
 
 
-    public PopulationFromMito(double scalingFactor,  TrafficAssignmentUtil trafficAssignmentUtil) {
+    public PopulationFromMito(double scalingFactor,  TrafficAssignmentUtil trafficAssignmentUtil, String trafficAssignmentDirectory) {
 
-
-
+        this.trafficAssignmentDirectory = trafficAssignmentDirectory;
         this.scalingFactor = scalingFactor;
-
-
         this.trafficAssignmentUtil = trafficAssignmentUtil;
-
-        tempModeChoice = new TempModeChoice();
+        tempModeChoice = new TempModeChoice(trafficAssignmentDirectory);
         tempModeChoice.setup();
-        tempTimeOfDay = new TempTimeOfDay();
+        tempTimeOfDay = new TempTimeOfDay(trafficAssignmentDirectory);
         tempTimeOfDay.setup();
 
     }
@@ -79,16 +75,14 @@ public class PopulationFromMito {
                     matsimPopulation.addPerson(matsimPerson);
 
                 }
-
             }
-
         }
 
         boolean writePopulation = true;
         if (writePopulation){
-            new File("C:/models/siloMitoMatsim/output/").mkdir();
+            new File(trafficAssignmentDirectory + "output/").mkdir();
             MatsimWriter popWriter = new PopulationWriter(matsimPopulation, matsimNetwork);
-            popWriter.write("C:/models/siloMitoMatsim/output/population" + year  + ".xml");
+            popWriter.write(trafficAssignmentDirectory + "output/population" + year  + ".xml");
 
         }
 

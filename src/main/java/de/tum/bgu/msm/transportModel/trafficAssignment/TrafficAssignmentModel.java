@@ -18,19 +18,15 @@ import java.util.Map;
 
 public class TrafficAssignmentModel {
 
+    private String trafficAssignmentDirectory;
     private TrafficAssignmentUtil trafficAssignmentUtil;
-
     private Config matsimConfig;
     private MutableScenario matsimScenario;
     private Population matsimPopulation;
-
-    private String networkFile = "C:/models/siloMitoMatsim/input/studyNetworkLight.xml";
-
     private int[] zones;
     private Matrix autoTravelTimes;
     private Matrix transitTravelTimes;
     private Map<Integer, MitoHousehold> mitoHouseholds;
-
     private double scalingFactor;
     private int numberOfIterations;
     private int numberOfThreads;
@@ -39,41 +35,32 @@ public class TrafficAssignmentModel {
 
     public TrafficAssignmentModel(double scalingFactor, int numberOfIterations, int numberOfThreads) {
 
+        trafficAssignmentDirectory = "C:/models/siloMitoMatsim/";
 
-        trafficAssignmentUtil = new TrafficAssignmentUtil();
+        trafficAssignmentUtil = new TrafficAssignmentUtil(trafficAssignmentDirectory);
         trafficAssignmentUtil.readCoordinateData();
-
         this.numberOfIterations = numberOfIterations;
         this.scalingFactor = scalingFactor;
         this.numberOfThreads = numberOfThreads;
-
-        populationFromMito = new PopulationFromMito(scalingFactor,trafficAssignmentUtil);
+        populationFromMito = new PopulationFromMito(scalingFactor,trafficAssignmentUtil, trafficAssignmentDirectory);
 
     }
 
     public void setup(){
         //create config parameters for all the simulation years
         configMatsim(numberOfIterations, numberOfThreads);
-
-
     }
 
     public void load(int year){
         //configure specific parameters for the simulated years
+
+        String networkFile = trafficAssignmentDirectory + "input/studyNetworkLight.xml";
         matsimConfig.network().setInputFile(networkFile);
-
         matsimScenario = (MutableScenario) ScenarioUtils.loadScenario(matsimConfig);
-
-        matsimConfig.controler().setOutputDirectory("C:/models/siloMitoMatsim/output/" + year);
+        matsimConfig.controler().setOutputDirectory(trafficAssignmentDirectory + "output/" + year);
         matsimConfig.controler().setRunId("trafficAssignment" + year);
-
-
         matsimPopulation = populationFromMito.createPopulationFromMito(mitoHouseholds,  autoTravelTimes, transitTravelTimes, zones, year);
-
         matsimScenario.setPopulation(matsimPopulation);
-
-
-
 
     }
 

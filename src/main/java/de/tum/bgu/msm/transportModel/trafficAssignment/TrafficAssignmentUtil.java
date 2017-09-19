@@ -19,6 +19,11 @@ public class TrafficAssignmentUtil {
     static Logger logger = Logger.getLogger(TrafficAssignmentUtil.class);
 
     private Map<Integer, Coord> coordinateMap = new HashMap<>();
+    private String trafficAssignmentDirectory;
+
+    public TrafficAssignmentUtil(String trafficAssignmentDirectory) {
+        this.trafficAssignmentDirectory = trafficAssignmentDirectory;
+    }
 
     public Coord getZoneCoordinates(int zoneId){
 
@@ -31,14 +36,12 @@ public class TrafficAssignmentUtil {
 
     }
 
-
-
     public void readCoordinateData() {
         // read dwelling micro data from ascii file
 
         logger.info("Reading zone coordinates");
 
-        String fileName = "C:/models/siloMitoMatsim/input/zoneCoordinates.csv";
+        String fileName = trafficAssignmentDirectory + "input/zoneCoordinates.csv";
 
 
         String recString = "";
