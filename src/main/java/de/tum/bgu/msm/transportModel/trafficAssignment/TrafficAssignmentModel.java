@@ -32,14 +32,16 @@ public class TrafficAssignmentModel {
     private PopulationFromMito populationFromMito;
 
     public TrafficAssignmentModel() {
-        trafficAssignmentUtil = new TrafficAssignmentUtil(trafficAssignmentDirectory);
+        trafficAssignmentUtil = new TrafficAssignmentUtil();
         populationFromMito = new PopulationFromMito();
     }
 
     public void setup(double scalingFactor, int numberOfIterations, int numberOfThreads){
-        //create common configuration parameters for every year
-        trafficAssignmentUtil.readCoordinateData();
+
         trafficAssignmentDirectory = "C:/models/siloMitoMatsim/";
+        //create common configuration parameters for every year
+        trafficAssignmentUtil.setup(trafficAssignmentDirectory);
+        trafficAssignmentUtil.readCoordinateData();
         this.numberOfIterations = numberOfIterations;
         this.scalingFactor = scalingFactor;
         this.numberOfThreads = numberOfThreads;

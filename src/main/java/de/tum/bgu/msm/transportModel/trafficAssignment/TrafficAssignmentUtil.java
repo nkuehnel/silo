@@ -21,7 +21,11 @@ public class TrafficAssignmentUtil {
     private Map<Integer, Coord> coordinateMap = new HashMap<>();
     private String trafficAssignmentDirectory;
 
-    public TrafficAssignmentUtil(String trafficAssignmentDirectory) {
+    public TrafficAssignmentUtil() {
+
+    }
+
+    public void setup(String trafficAssignmentDirectory){
         this.trafficAssignmentDirectory = trafficAssignmentDirectory;
     }
 
