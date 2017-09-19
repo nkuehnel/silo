@@ -2,7 +2,6 @@ package de.tum.bgu.msm.transportModel.trafficAssignment;
 
 import com.pb.common.matrix.Matrix;
 import de.tum.bgu.msm.data.MitoHousehold;
-import de.tum.bgu.msm.data.MitoTrip;
 import org.matsim.api.core.v01.population.Population;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
@@ -13,7 +12,6 @@ import org.matsim.core.scenario.MutableScenario;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.utils.geometry.transformations.TransformationFactory;
 
-import java.util.ArrayList;
 import java.util.Map;
 
 public class TrafficAssignmentModel {
@@ -33,29 +31,38 @@ public class TrafficAssignmentModel {
 
     private PopulationFromMito populationFromMito;
 
-    public TrafficAssignmentModel(double scalingFactor, int numberOfIterations, int numberOfThreads) {
-
-        trafficAssignmentDirectory = "C:/models/siloMitoMatsim/";
-
+    public TrafficAssignmentModel() {
         trafficAssignmentUtil = new TrafficAssignmentUtil(trafficAssignmentDirectory);
+        populationFromMito = new PopulationFromMito();
+    }
+
+    public void setup(double scalingFactor, int numberOfIterations, int numberOfThreads){
+        //create common configuration parameters for every year
         trafficAssignmentUtil.readCoordinateData();
+        trafficAssignmentDirectory = "C:/models/siloMitoMatsim/";
         this.numberOfIterations = numberOfIterations;
         this.scalingFactor = scalingFactor;
         this.numberOfThreads = numberOfThreads;
-        populationFromMito = new PopulationFromMito(scalingFactor,trafficAssignmentUtil, trafficAssignmentDirectory);
+        populationFromMito.setup(scalingFactor, trafficAssignmentUtil, trafficAssignmentDirectory);
 
-    }
 
-    public void setup(){
-        //create config parameters for all the simulation years
         configMatsim(numberOfIterations, numberOfThreads);
     }
 
-    public void load(int year){
-        //configure specific parameters for the simulated years
+    public void feedDataToMatsim(int[] zones, Matrix autoTravelTimes, Matrix transitTravelTimes, Map<Integer, MitoHousehold> mitoHouseholds){
+        //feeds data from silo matsim, it is year-specific - I suggest to combine with the next method load
+        this.zones = zones;
+        this.mitoHouseholds = mitoHouseholds;
+        this.autoTravelTimes = autoTravelTimes;
+        this.transitTravelTimes = transitTravelTimes;
+    }
 
+    public void load(int year){
+        //configure year-specific parameters
         String networkFile = trafficAssignmentDirectory + "input/studyNetworkLight.xml";
         matsimConfig.network().setInputFile(networkFile);
+
+        //creates a matsim scenario and the population from mito households/persons/trips
         matsimScenario = (MutableScenario) ScenarioUtils.loadScenario(matsimConfig);
         matsimConfig.controler().setOutputDirectory(trafficAssignmentDirectory + "output/" + year);
         matsimConfig.controler().setRunId("trafficAssignment" + year);
@@ -66,28 +73,16 @@ public class TrafficAssignmentModel {
 
     public Matrix runTrafficAssignmentToGetTravelTimeMatrix(){
         //run matsim for the selected year
-
         final Controler controler = new Controler(matsimScenario);
-
         Zone2ZoneTravelTime zone2ZoneTravelTime = new Zone2ZoneTravelTime(autoTravelTimes, controler, matsimScenario.getNetwork(),
                 numberOfIterations, zones, 8*60*60, 1 , trafficAssignmentUtil );
-
         controler.addControlerListener(zone2ZoneTravelTime);
         controler.run();
-
         return zone2ZoneTravelTime.getAutoTravelTime();
-
     }
 
 
-    public void feedDataToMatsim(int[] zones, Matrix autoTravelTimes, Matrix transitTravelTimes, Map<Integer, MitoHousehold> mitoHouseholds){
 
-        this.zones = zones;
-        this.mitoHouseholds = mitoHouseholds;
-        this.autoTravelTimes = autoTravelTimes;
-        this.transitTravelTimes = transitTravelTimes;
-
-    }
 
 
     public void configMatsim(int numberOfIterations, int numberOfThreads){

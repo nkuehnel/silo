@@ -11,13 +11,13 @@ public class TempTimeOfDay {
     private double[] departure2WProb;
     private double[] wDurationProb;
 
-    public TempTimeOfDay(String trafficAssignmentDirectoty) {
-        this.trafficAssignmentDirectoty = trafficAssignmentDirectoty;
+    public TempTimeOfDay() {
+
     }
 
 
-    public void setup(){
-
+    public void setup(String trafficAssignmentDirectoty){
+        this.trafficAssignmentDirectoty = trafficAssignmentDirectoty;
         TableDataSet timeOfDayDistributions = SiloUtil.readCSVfile(trafficAssignmentDirectoty + "input/midTimeDistributions.csv");
         timeClasses = timeOfDayDistributions.getColumnAsInt("classes");
         departure2WProb = timeOfDayDistributions.getColumnAsDouble("H2W_departure");

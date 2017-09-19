@@ -32,16 +32,19 @@ public class PopulationFromMito {
     private TempTimeOfDay tempTimeOfDay;
 
 
-    public PopulationFromMito(double scalingFactor,  TrafficAssignmentUtil trafficAssignmentUtil, String trafficAssignmentDirectory) {
+    public PopulationFromMito() {
+        tempModeChoice = new TempModeChoice();
+        tempTimeOfDay = new TempTimeOfDay();
+
+    }
+
+    public void setup(double scalingFactor,  TrafficAssignmentUtil trafficAssignmentUtil, String trafficAssignmentDirectory){
 
         this.trafficAssignmentDirectory = trafficAssignmentDirectory;
         this.scalingFactor = scalingFactor;
         this.trafficAssignmentUtil = trafficAssignmentUtil;
-        tempModeChoice = new TempModeChoice(trafficAssignmentDirectory);
-        tempModeChoice.setup();
-        tempTimeOfDay = new TempTimeOfDay(trafficAssignmentDirectory);
-        tempTimeOfDay.setup();
-
+        tempModeChoice.setup(trafficAssignmentDirectory);
+        tempTimeOfDay.setup(trafficAssignmentDirectory);
     }
 
     public Population createPopulationFromMito(Map<Integer, MitoHousehold> households, Matrix autoTravelTime, Matrix transitTravelTime, int[] zones, int year){

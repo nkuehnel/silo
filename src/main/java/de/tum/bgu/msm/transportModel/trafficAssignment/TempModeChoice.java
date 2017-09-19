@@ -30,12 +30,12 @@ public class TempModeChoice {
     private float beta_bicycle = -0.07f;
     private float beta_transit = -0.05f;
 
-    public TempModeChoice(String trafficAssignmentDirectory) {
-        this.trafficAssignmentDirectory = trafficAssignmentDirectory;
+    public TempModeChoice() {
+
     }
 
-    public void setup(){
-
+    public void setup(String trafficAssignmentDirectory){
+        this.trafficAssignmentDirectory = trafficAssignmentDirectory;
         OmxFile file = new OmxFile(trafficAssignmentDirectory + "input/tdTest.omx");
         file.openReadOnly();
         OmxMatrix matrix = file.getMatrix("mat1");

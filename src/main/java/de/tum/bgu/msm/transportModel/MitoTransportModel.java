@@ -22,7 +22,6 @@ public class MitoTransportModel implements TransportModelI {
     private static final Logger logger = Logger.getLogger( MitoTransportModel.class );
     private MitoModel mito;
     private TrafficAssignmentModel trafficAssignmentModel;
-
     private Matrix outputAutoTravelTime;
 
 
@@ -31,8 +30,8 @@ public class MitoTransportModel implements TransportModelI {
         mito.setRandomNumberGenerator(SiloUtil.getRandomObject());
         setBaseDirectory(baseDirectory);
 
-        trafficAssignmentModel = new TrafficAssignmentModel(0.5, 10, 16);
-        trafficAssignmentModel.setup();
+        trafficAssignmentModel = new TrafficAssignmentModel();
+        trafficAssignmentModel.setup(0.5, 10, 16);
 
     }
 
@@ -44,7 +43,7 @@ public class MitoTransportModel implements TransportModelI {
         InputFeed feed = new InputFeed(zones, autoTravelTimes, transitTravelTimes, mitoHouseholds, retailEmplByZone,
                 officeEmplByZone, otherEmplByZone, totalEmplByZone, sizeOfZonesInAcre);
         mito.feedData(feed);
-
+        //check whether feed data is done every run year or only once
         trafficAssignmentModel.feedDataToMatsim(zones, autoTravelTimes, transitTravelTimes, mitoHouseholds);
 
     }
