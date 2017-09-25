@@ -30,8 +30,8 @@ public class MitoTransportModel implements TransportModelI {
         mito.setRandomNumberGenerator(SiloUtil.getRandomObject());
         setBaseDirectory(baseDirectory);
 
-        trafficAssignmentModel = new TrafficAssignmentModel();
-        trafficAssignmentModel.setup(0.5, 10, 16);
+        //trafficAssignmentModel = new TrafficAssignmentModel();
+        //trafficAssignmentModel.setup(0.5, 10, 16);
 
     }
 
@@ -44,7 +44,7 @@ public class MitoTransportModel implements TransportModelI {
                 officeEmplByZone, otherEmplByZone, totalEmplByZone, sizeOfZonesInAcre);
         mito.feedData(feed);
         //check whether feed data is done every run year or only once
-        trafficAssignmentModel.feedDataToMatsim(zones, autoTravelTimes, transitTravelTimes, mitoHouseholds);
+        //trafficAssignmentModel.feedDataToMatsim(zones, autoTravelTimes, transitTravelTimes, mitoHouseholds);
 
     }
 
@@ -65,9 +65,9 @@ public class MitoTransportModel implements TransportModelI {
         logger.info("  Running travel demand model MITO for the year " + year);
         mito.runModel();
 
-        logger.info("  Running traffic assignment for the year " + year);
-        trafficAssignmentModel.load(year);
-        outputAutoTravelTime = trafficAssignmentModel.runTrafficAssignmentToGetTravelTimeMatrix();
+        //logger.info("  Running traffic assignment for the year " + year);
+        //trafficAssignmentModel.load(year);
+        //outputAutoTravelTime = trafficAssignmentModel.runTrafficAssignmentToGetTravelTimeMatrix();
 
     }
 
