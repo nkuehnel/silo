@@ -3,6 +3,7 @@ package de.tum.bgu.msm.transportModel;
 import com.pb.common.matrix.Matrix;
 import de.tum.bgu.msm.MitoModel;
 import de.tum.bgu.msm.SiloUtil;
+import de.tum.bgu.msm.data.Accessibility;
 import de.tum.bgu.msm.data.MitoHousehold;
 import de.tum.bgu.msm.io.input.InputFeed;
 import de.tum.bgu.msm.transportModel.trafficAssignment.TrafficAssignmentModel;
@@ -22,7 +23,6 @@ public class MitoTransportModel implements TransportModelI {
     private static final Logger logger = Logger.getLogger( MitoTransportModel.class );
     private MitoModel mito;
     private TrafficAssignmentModel trafficAssignmentModel;
-    private Matrix outputAutoTravelTime;
 
 
     public MitoTransportModel(ResourceBundle rb, String baseDirectory) {
@@ -67,7 +67,8 @@ public class MitoTransportModel implements TransportModelI {
 
         //logger.info("  Running traffic assignment for the year " + year);
         //trafficAssignmentModel.load(year);
-        //outputAutoTravelTime = trafficAssignmentModel.runTrafficAssignmentToGetTravelTimeMatrix();
+        //Matrix outputAutoTravelTime = trafficAssignmentModel.runTrafficAssignmentToGetTravelTimeMatrix();
+        //Accessibility.updateHwySkim(outputAutoTravelTime);
 
     }
 

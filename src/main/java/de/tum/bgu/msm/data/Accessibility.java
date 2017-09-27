@@ -310,4 +310,6 @@ at de.tum.bgu.msm.data.Accessibility.calculateAccessibilities(Accessibility.java
     public static Matrix getTransitSkim() {
         return transitSkim;
     }
+
+    public static void updateHwySkim(Matrix hwySkim) { Accessibility.hwySkim = hwySkim;}
 }
