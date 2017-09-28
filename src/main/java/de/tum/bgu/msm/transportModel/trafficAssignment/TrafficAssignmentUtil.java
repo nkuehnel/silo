@@ -8,20 +8,24 @@ import de.tum.bgu.msm.data.RealEstateDataManager;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Coord;
 
+import javax.annotation.Resource;
+import javax.naming.spi.ResolveResult;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.ResourceBundle;
 
 public class TrafficAssignmentUtil {
 
     static Logger logger = Logger.getLogger(TrafficAssignmentUtil.class);
-
+    private ResourceBundle rb;
     private Map<Integer, Coord> coordinateMap = new HashMap<>();
     private String trafficAssignmentDirectory;
 
-    public TrafficAssignmentUtil() {
+    public TrafficAssignmentUtil(ResourceBundle rb) {
+        this.rb = rb;
 
     }
 
@@ -32,7 +36,7 @@ public class TrafficAssignmentUtil {
     public Coord getZoneCoordinates(int zoneId){
 
         if (!coordinateMap.keySet().contains(zoneId)){
-            //this solves the issue of zones not included in the test list of zones
+            //TODO this solves the issue of zones not included in the test list of zones
             return new Coord(4468000,5333000);
         } else {
             return coordinateMap.get(zoneId);
@@ -45,7 +49,7 @@ public class TrafficAssignmentUtil {
 
         logger.info("Reading zone coordinates");
 
-        String fileName = trafficAssignmentDirectory + "input/zoneCoordinates.csv";
+        String fileName = trafficAssignmentDirectory + rb.getString("matsim.zone.coordinates");
 
 
         String recString = "";

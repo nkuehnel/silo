@@ -18,9 +18,10 @@ import org.matsim.core.scenario.ScenarioUtils;
 
 import java.io.File;
 import java.util.Map;
+import java.util.ResourceBundle;
 
 public class PopulationFromMito {
-
+    private ResourceBundle rb;
     static Logger logger = Logger.getLogger(PopulationFromMito.class);
     private String trafficAssignmentDirectory;
     private PopulationFactory matsimPopulationFactory;
@@ -32,9 +33,10 @@ public class PopulationFromMito {
     private TempTimeOfDay tempTimeOfDay;
 
 
-    public PopulationFromMito() {
-        tempModeChoice = new TempModeChoice();
-        tempTimeOfDay = new TempTimeOfDay();
+    public PopulationFromMito(ResourceBundle rb) {
+        this.rb=rb;
+        tempModeChoice = new TempModeChoice(rb);
+        tempTimeOfDay = new TempTimeOfDay(rb);
 
     }
 

@@ -1,6 +1,7 @@
 package de.tum.bgu.msm.transportModel;
 
 import com.pb.common.matrix.Matrix;
+import com.pb.common.util.ResourceUtil;
 import de.tum.bgu.msm.MitoModel;
 import de.tum.bgu.msm.SiloUtil;
 import de.tum.bgu.msm.data.Accessibility;
@@ -25,13 +26,15 @@ public class MitoTransportModel implements TransportModelI {
     private TrafficAssignmentModel trafficAssignmentModel;
 
 
-    public MitoTransportModel(ResourceBundle rb, String baseDirectory) {
-        this.mito = new MitoModel(rb);
+    public MitoTransportModel(ResourceBundle mitoRb, ResourceBundle siloRb, String baseDirectory) {
+        this.mito = new MitoModel(mitoRb);
         mito.setRandomNumberGenerator(SiloUtil.getRandomObject());
         setBaseDirectory(baseDirectory);
 
-        //trafficAssignmentModel = new TrafficAssignmentModel();
-        //trafficAssignmentModel.setup(0.5, 10, 16);
+        //trafficAssignmentModel = new TrafficAssignmentModel(siloRb);
+//       trafficAssignmentModel.setup(ResourceUtil.getDoubleProperty(siloRb, "matsim.scaling.factor"),
+//                ResourceUtil.getIntegerProperty(siloRb, "matsim.iterations"),
+//                ResourceUtil.getIntegerProperty(siloRb, "matsim.threads"));
 
     }
 
@@ -44,7 +47,7 @@ public class MitoTransportModel implements TransportModelI {
                 officeEmplByZone, otherEmplByZone, totalEmplByZone, sizeOfZonesInAcre);
         mito.feedData(feed);
         //check whether feed data is done every run year or only once
-        //trafficAssignmentModel.feedDataToMatsim(zones, autoTravelTimes, transitTravelTimes, mitoHouseholds);
+       // trafficAssignmentModel.feedDataToMatsim(zones, autoTravelTimes, transitTravelTimes, mitoHouseholds);
 
     }
 
@@ -67,8 +70,8 @@ public class MitoTransportModel implements TransportModelI {
 
         //logger.info("  Running traffic assignment for the year " + year);
         //trafficAssignmentModel.load(year);
-        //Matrix outputAutoTravelTime = trafficAssignmentModel.runTrafficAssignmentToGetTravelTimeMatrix();
-        //Accessibility.updateHwySkim(outputAutoTravelTime);
+       // Matrix outputAutoTravelTime = trafficAssignmentModel.runTrafficAssignmentToGetTravelTimeMatrix();
+       // Accessibility.updateHwySkim(outputAutoTravelTime);
 
     }
 

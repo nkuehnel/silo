@@ -8,11 +8,12 @@ import omx.OmxMatrix;
 import org.apache.commons.math3.distribution.EnumeratedIntegerDistribution;
 
 import java.util.Arrays;
+import java.util.ResourceBundle;
 
 //temporary mode choice model, it won't be used when mito trips have selected mode
 
 public class TempModeChoice {
-
+    private ResourceBundle rb;
     private String trafficAssignmentDirectory;
     private Matrix autoTravelDistance;
 
@@ -30,13 +31,13 @@ public class TempModeChoice {
     private float beta_bicycle = -0.07f;
     private float beta_transit = -0.05f;
 
-    public TempModeChoice() {
-
+    public TempModeChoice(ResourceBundle rb) {
+        this.rb=rb;
     }
 
     public void setup(String trafficAssignmentDirectory){
         this.trafficAssignmentDirectory = trafficAssignmentDirectory;
-        OmxFile file = new OmxFile(trafficAssignmentDirectory + "input/tdTest.omx");
+        OmxFile file = new OmxFile(trafficAssignmentDirectory + rb.getString("matsim.distance.skim.file"));
         file.openReadOnly();
         OmxMatrix matrix = file.getMatrix("mat1");
         autoTravelDistance = SiloUtil.convertOmxToMatrix(matrix);

@@ -13,9 +13,10 @@ import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.utils.geometry.transformations.TransformationFactory;
 
 import java.util.Map;
+import java.util.ResourceBundle;
 
 public class TrafficAssignmentModel {
-
+    private ResourceBundle rb;
     private String trafficAssignmentDirectory;
     private TrafficAssignmentUtil trafficAssignmentUtil;
     private Config matsimConfig;
@@ -31,14 +32,16 @@ public class TrafficAssignmentModel {
 
     private PopulationFromMito populationFromMito;
 
-    public TrafficAssignmentModel() {
-        trafficAssignmentUtil = new TrafficAssignmentUtil();
-        populationFromMito = new PopulationFromMito();
+    public TrafficAssignmentModel(ResourceBundle rb) {
+        this.rb = rb;
+
+        trafficAssignmentUtil = new TrafficAssignmentUtil(rb);
+        populationFromMito = new PopulationFromMito(rb);
     }
 
     public void setup(double scalingFactor, int numberOfIterations, int numberOfThreads){
 
-        trafficAssignmentDirectory = "C:/models/siloMitoMatsim/";
+        trafficAssignmentDirectory = rb.getString("matsim.directory");
         //create common configuration parameters for every year
         trafficAssignmentUtil.setup(trafficAssignmentDirectory);
         trafficAssignmentUtil.readCoordinateData();
@@ -61,7 +64,14 @@ public class TrafficAssignmentModel {
 
     public void load(int year){
         //configure year-specific parameters
-        String networkFile = trafficAssignmentDirectory + "input/studyNetworkLight.xml";
+        //todo only 2 networks before and after certain year - 2030 in the test
+        String networkFile;
+        if (year < 2030) {
+            networkFile = trafficAssignmentDirectory + rb.getString("matsim.network.2000");
+        } else {
+            networkFile = trafficAssignmentDirectory + rb.getString("matsim.network.2030");
+        }
+
         matsimConfig.network().setInputFile(networkFile);
 
         //creates a matsim scenario and the population from mito households/persons/trips
