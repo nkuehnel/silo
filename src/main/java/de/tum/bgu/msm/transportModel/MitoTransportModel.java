@@ -6,6 +6,7 @@ import de.tum.bgu.msm.MitoModel;
 import de.tum.bgu.msm.SiloUtil;
 import de.tum.bgu.msm.data.Accessibility;
 import de.tum.bgu.msm.data.MitoHousehold;
+import de.tum.bgu.msm.data.Zone;
 import de.tum.bgu.msm.io.input.InputFeed;
 import de.tum.bgu.msm.transportModel.trafficAssignment.TrafficAssignmentModel;
 import org.apache.log4j.Logger;
@@ -38,13 +39,10 @@ public class MitoTransportModel implements TransportModelI {
 
     }
 
-
-    public void feedData(int[] zones, Matrix autoTravelTimes, Matrix transitTravelTimes, Map<Integer, MitoHousehold> mitoHouseholds,
-                         int[] retailEmplByZone, int[] officeEmplByZone, int[] otherEmplByZone, int[] totalEmplByZone,
-                         float[] sizeOfZonesInAcre) {
+    @Override
+    public void feedData(Map<Integer, Zone> zones, Matrix hwySkim, Matrix transitSkim, Map<Integer, MitoHousehold> households) {
         logger.info("  SILO data being sent to MITO");
-        InputFeed feed = new InputFeed(zones, autoTravelTimes, transitTravelTimes, mitoHouseholds, retailEmplByZone,
-                officeEmplByZone, otherEmplByZone, totalEmplByZone, sizeOfZonesInAcre);
+        InputFeed feed = new InputFeed(zones, hwySkim, transitSkim, households);
         mito.feedData(feed);
         //check whether feed data is done every run year or only once
        // trafficAssignmentModel.feedDataToMatsim(zones, autoTravelTimes, transitTravelTimes, mitoHouseholds);
@@ -83,5 +81,7 @@ public class MitoTransportModel implements TransportModelI {
     public void tripGeneration() {
         // not doing anything.
     }
+
+
 
 }

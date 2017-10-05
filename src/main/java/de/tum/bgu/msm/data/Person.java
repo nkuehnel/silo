@@ -52,7 +52,7 @@ public class Person implements Serializable {
     //Attributes that could be additionally defined from the synthetic population. Remember to use "set"
     int telework = 0;
     int educationLevel = 0;
-    int nationality = 0;
+    Nationality nationality = Nationality.german;
     float travelTime = 0;
     int zone = 0;
     int hhSize = 0;
@@ -288,11 +288,11 @@ public class Person implements Serializable {
         return workplace;
     }
 
-    public void quitJob (boolean makeJobAvailableToOthers, SiloDataContainer dataContainer) {
+    public void quitJob (boolean makeJobAvailableToOthers, JobDataManager jobDataManager) {
         // Person quits job and the job is added to the vacantJobList
         // <makeJobAvailableToOthers> is false if this job disappears from the job market
         Job jb = Job.getJobFromId(workplace);
-        if (makeJobAvailableToOthers) dataContainer.getJobData().addJobToVacancyList(jb.getZone(), workplace);
+        if (makeJobAvailableToOthers) jobDataManager.addJobToVacancyList(jb.getZone(), workplace);
         jb.setWorkerID(-1);
         workplace = -1;
         occupation = 2;
@@ -315,11 +315,11 @@ public class Person implements Serializable {
         return telework;
     }
 
-    public void setNationality(int nationality) {
+    public void setNationality(Nationality nationality) {
         this.nationality = nationality;
     }
 
-    public int getNationality() {
+    public Nationality getNationality() {
         return nationality;
     }
 
