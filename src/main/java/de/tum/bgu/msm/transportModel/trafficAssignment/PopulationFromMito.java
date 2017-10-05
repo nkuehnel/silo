@@ -63,10 +63,10 @@ public class PopulationFromMito {
 
         for (MitoHousehold mitoHousehold : households.values()){
             //with master at 22.9
-            for (MitoPerson mitoPerson : mitoHousehold.getPersons()){
+            for (MitoPerson mitoPerson : mitoHousehold.getPersons().values()){
 
                 //start with HBW trips
-                int homeZone = mitoHousehold.getHomeZone();
+                int homeZone = mitoHousehold.getHomeZone().getZoneId();
                 int workZone = zones[SiloUtil.select(zones.length)];
 
                 int mode = tempModeChoice.selectMode(homeZone, workZone);
