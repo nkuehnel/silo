@@ -66,43 +66,28 @@ public class PopulationFromMito {
             //with master at 22.9
             for (MitoPerson mitoPerson : mitoHousehold.getPersons().values()){
 
-                //start with HBW trips
-                int homeZone = mitoHousehold.getHomeZone().getZoneId();
-                int workZone = mitoPerson.getWorkplace();
 
-                int mode = tempModeChoice.selectMode(homeZone, workZone);
+                if (mitoPerson.getWorkplace() != -1) {
+                    //start with HBW trips
+                    int homeZone = mitoHousehold.getHomeZone().getZoneId();
+                    int workZone = mitoPerson.getWorkplace();
 
-                if (SiloUtil.getRandomNumberAsDouble() < scalingFactor && mode == 0){
 
-                    org.matsim.api.core.v01.population.Person matsimPerson = matsimPopulationFactory.createPerson(Id.create(mitoPerson.getId(), org.matsim.api.core.v01.population.Person.class));
-                    matsimPlan = matsimPopulationFactory.createPlan();
-                    addTripsToWork(homeZone, workZone);
-                    //logger.info("person: " + mitoPerson.getId() + " home at " + homeZone + " work at " + workZone);
-                    matsimPerson.addPlan(matsimPlan);
-                    matsimPopulation.addPerson(matsimPerson);
+                    int mode = tempModeChoice.selectMode(homeZone, workZone);
 
+                    if (SiloUtil.getRandomNumberAsDouble() < scalingFactor && mode == 0) {
+
+                        org.matsim.api.core.v01.population.Person matsimPerson = matsimPopulationFactory.createPerson(Id.create(mitoPerson.getId(), org.matsim.api.core.v01.population.Person.class));
+                        matsimPlan = matsimPopulationFactory.createPlan();
+                        addTripsToWork(homeZone, workZone);
+                        //logger.info("person: " + mitoPerson.getId() + " home at " + homeZone + " work at " + workZone);
+                        matsimPerson.addPlan(matsimPlan);
+                        matsimPopulation.addPerson(matsimPerson);
+
+                    }
                 }
             }
-            //with tripDist at 22.9
-           /* for (MitoPerson mitoPerson : mitoHousehold.getPersons().values()){
 
-                //start with HBW trips
-                int homeZone = mitoHousehold.getHomeZone().getZoneId();
-                int workZone = zones[SiloUtil.select(zones.length)];
-
-                int mode = tempModeChoice.selectMode(homeZone, workZone);
-
-                if (SiloUtil.getRandomNumberAsDouble() < scalingFactor && mode == 0){
-
-                    org.matsim.api.core.v01.population.Person matsimPerson = matsimPopulationFactory.createPerson(Id.create(mitoPerson.getId(), org.matsim.api.core.v01.population.Person.class));
-                    matsimPlan = matsimPopulationFactory.createPlan();
-                    addTripsToWork(homeZone, workZone);
-                    //logger.info("person: " + mitoPerson.getId() + " home at " + homeZone + " work at " + workZone);
-                    matsimPerson.addPlan(matsimPlan);
-                    matsimPopulation.addPerson(matsimPerson);
-
-                }
-            }*/
         }
 
         boolean writePopulation = true;

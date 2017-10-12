@@ -43,7 +43,7 @@ public class MitoTransportModel implements TransportModelI {
     public void feedData(Map<Integer, Zone> zones, Matrix hwySkim, Matrix transitSkim, Map<Integer, MitoHousehold> households) {
         logger.info("  SILO data being sent to MITO");
         InputFeed feed = new InputFeed(zones, hwySkim, transitSkim, households);
-        mito.feedData(feed);
+        //mito.feedData(feed);
         //check whether feed data is done every run year or only once
        trafficAssignmentModel.feedDataToMatsim(zones, hwySkim, transitSkim, households);
 
@@ -64,12 +64,12 @@ public class MitoTransportModel implements TransportModelI {
     public void runTransportModel(int year) {
 
         logger.info("  Running travel demand model MITO for the year " + year);
-        mito.runModel();
+        //mito.runModel();
 
         //logger.info("  Running traffic assignment for the year " + year);
-        //trafficAssignmentModel.load(year);
-       // Matrix outputAutoTravelTime = trafficAssignmentModel.runTrafficAssignmentToGetTravelTimeMatrix();
-       // Accessibility.updateHwySkim(outputAutoTravelTime);
+        trafficAssignmentModel.load(year);
+        Matrix outputAutoTravelTime = trafficAssignmentModel.runTrafficAssignmentToGetTravelTimeMatrix();
+        Accessibility.updateHwySkim(outputAutoTravelTime);
 
     }
 
