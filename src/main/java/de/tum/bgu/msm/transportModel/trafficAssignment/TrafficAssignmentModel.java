@@ -2,6 +2,7 @@ package de.tum.bgu.msm.transportModel.trafficAssignment;
 
 import com.pb.common.matrix.Matrix;
 import de.tum.bgu.msm.data.MitoHousehold;
+import de.tum.bgu.msm.data.Zone;
 import org.matsim.api.core.v01.population.Population;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
@@ -22,7 +23,7 @@ public class TrafficAssignmentModel {
     private Config matsimConfig;
     private MutableScenario matsimScenario;
     private Population matsimPopulation;
-    private int[] zones;
+    private Map<Integer, Zone> zones;
     private Matrix autoTravelTimes;
     private Matrix transitTravelTimes;
     private Map<Integer, MitoHousehold> mitoHouseholds;
@@ -54,7 +55,7 @@ public class TrafficAssignmentModel {
         configMatsim(numberOfIterations, numberOfThreads);
     }
 
-    public void feedDataToMatsim(int[] zones, Matrix autoTravelTimes, Matrix transitTravelTimes, Map<Integer, MitoHousehold> mitoHouseholds){
+    public void feedDataToMatsim(Map<Integer, Zone> zones, Matrix autoTravelTimes, Matrix transitTravelTimes, Map<Integer, MitoHousehold> mitoHouseholds){
         //feeds data from silo matsim, it is year-specific - I suggest to combine with the next method load
         this.zones = zones;
         this.mitoHouseholds = mitoHouseholds;

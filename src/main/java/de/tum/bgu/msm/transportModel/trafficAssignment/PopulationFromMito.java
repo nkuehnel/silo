@@ -4,6 +4,7 @@ import com.pb.common.matrix.Matrix;
 import de.tum.bgu.msm.SiloUtil;
 import de.tum.bgu.msm.data.MitoHousehold;
 import de.tum.bgu.msm.data.MitoPerson;
+import de.tum.bgu.msm.data.Zone;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
@@ -49,7 +50,7 @@ public class PopulationFromMito {
         tempTimeOfDay.setup(trafficAssignmentDirectory);
     }
 
-    public Population createPopulationFromMito(Map<Integer, MitoHousehold> households, Matrix autoTravelTime, Matrix transitTravelTime, int[] zones, int year){
+    public Population createPopulationFromMito(Map<Integer, MitoHousehold> households, Matrix autoTravelTime, Matrix transitTravelTime, Map<Integer, Zone> zones, int year){
 
         this.autoTravelTime = autoTravelTime;
 
@@ -67,7 +68,7 @@ public class PopulationFromMito {
 
                 //start with HBW trips
                 int homeZone = mitoHousehold.getHomeZone().getZoneId();
-                int workZone = zones[SiloUtil.select(zones.length)];
+                int workZone = mitoPerson.getWorkplace();
 
                 int mode = tempModeChoice.selectMode(homeZone, workZone);
 

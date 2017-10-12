@@ -1,6 +1,7 @@
 package de.tum.bgu.msm.transportModel.trafficAssignment;
 
 import com.pb.common.matrix.Matrix;
+import de.tum.bgu.msm.data.Zone;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
@@ -25,7 +26,7 @@ public class Zone2ZoneTravelTime implements IterationEndsListener {
     private Controler controler;
     private Network network;
     private int finalIteration;
-    private int[] zones;
+    private Map<Integer, Zone> zones;
     //private Map<Integer, SimpleFeature> zoneFeatureMap;
     private int departureTime;
     private int numberOfCalcPoints;
@@ -37,7 +38,7 @@ public class Zone2ZoneTravelTime implements IterationEndsListener {
 
     public Zone2ZoneTravelTime(Matrix autoTravelTime, Controler controler, Network network,
                                        int finalIteration, /*Map<Integer, SimpleFeature> zoneFeatureMap*/
-                                       int [] zones,
+                               Map<Integer, Zone> zones,
                                        int timeOfDay,
                                        int numberOfCalcPoints,
                                TrafficAssignmentUtil trafficAssignmentUtil //CoordinateTransformation ct,
@@ -73,7 +74,8 @@ public class Zone2ZoneTravelTime implements IterationEndsListener {
             //Map to assign a node to each zone
             Map<Integer, Node> zoneCalculationNodesMap = new HashMap<>();
 
-            for (int i : zones) {
+            for (Zone zone : zones.values()) {
+                int i = zone.getZoneId();
                 Coord originCoord = trafficAssignmentUtil.getZoneCoordinates(i);
                 Link originLink = NetworkUtils.getNearestLink(network, originCoord);
                 Node originNode = originLink.getFromNode();
@@ -84,18 +86,18 @@ public class Zone2ZoneTravelTime implements IterationEndsListener {
 
             long startTime = System.currentTimeMillis();
 
-            for (int i = 0; i < zones.length; i++) { // loop origin zones
+            for (Zone originZone: zones.values()) { // loop origin zones
 
-                int orig = zones[i];
+                int orig = originZone.getZoneId();
                 Node originNode = zoneCalculationNodesMap.get(orig);
                 leastCoastPathTree.calculate(network, originNode, departureTime);
                 Map<Id<Node>, LeastCostPathTree.NodeData> tree = leastCoastPathTree.getTree();
 
-                for (int j = 0; j < zones.length; j++) { // going over all destination zones
+                for (Zone destinationZone : zones.values()) { // going over all destination zones
 
-                    int dest = zones[j];
+                    int dest = destinationZone.getZoneId();
                     //nex line to fill only half matrix and use half time
-                    if (i <= j) {
+                    if (orig <= dest) {
 
 
                         Node destinationNode = zoneCalculationNodesMap.get(dest);

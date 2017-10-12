@@ -32,10 +32,10 @@ public class MitoTransportModel implements TransportModelI {
         mito.setRandomNumberGenerator(SiloUtil.getRandomObject());
         setBaseDirectory(baseDirectory);
 
-        //trafficAssignmentModel = new TrafficAssignmentModel(siloRb);
-//       trafficAssignmentModel.setup(ResourceUtil.getDoubleProperty(siloRb, "matsim.scaling.factor"),
-//                ResourceUtil.getIntegerProperty(siloRb, "matsim.iterations"),
-//                ResourceUtil.getIntegerProperty(siloRb, "matsim.threads"));
+        trafficAssignmentModel = new TrafficAssignmentModel(siloRb);
+        trafficAssignmentModel.setup(ResourceUtil.getDoubleProperty(siloRb, "matsim.scaling.factor"),
+                ResourceUtil.getIntegerProperty(siloRb, "matsim.iterations"),
+                ResourceUtil.getIntegerProperty(siloRb, "matsim.threads"));
 
     }
 
@@ -45,7 +45,7 @@ public class MitoTransportModel implements TransportModelI {
         InputFeed feed = new InputFeed(zones, hwySkim, transitSkim, households);
         mito.feedData(feed);
         //check whether feed data is done every run year or only once
-       // trafficAssignmentModel.feedDataToMatsim(zones, autoTravelTimes, transitTravelTimes, mitoHouseholds);
+       trafficAssignmentModel.feedDataToMatsim(zones, hwySkim, transitSkim, households);
 
     }
 
