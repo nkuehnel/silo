@@ -32,10 +32,10 @@ public class MitoTransportModel implements TransportModelI {
         mito.setRandomNumberGenerator(SiloUtil.getRandomObject());
         setBaseDirectory(baseDirectory);
 
-        trafficAssignmentModel = new TrafficAssignmentModel(siloRb);
+/*        trafficAssignmentModel = new TrafficAssignmentModel(siloRb);
         trafficAssignmentModel.setup(ResourceUtil.getDoubleProperty(siloRb, "matsim.scaling.factor"),
                 ResourceUtil.getIntegerProperty(siloRb, "matsim.iterations"),
-                ResourceUtil.getIntegerProperty(siloRb, "matsim.threads"));
+                ResourceUtil.getIntegerProperty(siloRb, "matsim.threads"));*/
 
     }
 
@@ -43,9 +43,9 @@ public class MitoTransportModel implements TransportModelI {
     public void feedData(Map<Integer, Zone> zones, Matrix hwySkim, Matrix transitSkim, Map<Integer, MitoHousehold> households) {
         logger.info("  SILO data being sent to MITO");
         InputFeed feed = new InputFeed(zones, hwySkim, transitSkim, households);
-        //mito.feedData(feed);
+        mito.feedData(feed);
         //check whether feed data is done every run year or only once
-       trafficAssignmentModel.feedDataToMatsim(zones, hwySkim, transitSkim, households);
+       //trafficAssignmentModel.feedDataToMatsim(zones, hwySkim, transitSkim, households);
 
     }
 
@@ -67,9 +67,9 @@ public class MitoTransportModel implements TransportModelI {
         //mito.runModel();
 
         //logger.info("  Running traffic assignment for the year " + year);
-        trafficAssignmentModel.load(year);
+       /* trafficAssignmentModel.load(year);
         Matrix outputAutoTravelTime = trafficAssignmentModel.runTrafficAssignmentToGetTravelTimeMatrix();
-        Accessibility.updateHwySkim(outputAutoTravelTime);
+        Accessibility.updateHwySkim(outputAutoTravelTime);*/
 
     }
 
