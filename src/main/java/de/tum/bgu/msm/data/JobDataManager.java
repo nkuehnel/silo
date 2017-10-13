@@ -312,7 +312,7 @@ public class JobDataManager {
             // person has home location (i.e., is not inmigrating right now)
             for (int reg: regions) {
                 if (vacantJobsByRegionPos[reg] > 0) {
-                    int distance = (int) (Accessibility.getMinDistanceFromZoneToRegion(homeZone, reg) + 0.5);
+                    int distance = (int) (Accessibility.getAccessibility().getMinDistanceFromZoneToRegion (homeZone, reg) + 0.5);
                     regionProbability[reg] = Accessibility.getWorkTLFD(distance) * (double) getNumberOfVacantJobsByRegion(reg);
                 }
             }
@@ -320,7 +320,7 @@ public class JobDataManager {
                 // could not find job in reasonable distance. Person will have to commute far and is likely to relocate in the future
                 for (int reg: regions) {
                     if (vacantJobsByRegionPos[reg] > 0) {
-                        int distance = (int) (Accessibility.getMinDistanceFromZoneToRegion(homeZone, reg) + 0.5);
+                        int distance = (int) (Accessibility.getAccessibility().getMinDistanceFromZoneToRegion (homeZone, reg) + 0.5);
                         regionProbability[reg] = 1f / distance;
                     }
                 }

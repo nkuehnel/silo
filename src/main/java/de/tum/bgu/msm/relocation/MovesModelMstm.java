@@ -420,7 +420,7 @@ public class MovesModelMstm implements MovesModelI {
             workDistanceFactor[i] = 1;
             if (workZones != null) {  // for inmigrating household, work places are selected after household found a home
                 for (int workZone : workZones) {
-                    int smallestDistInMin = (int) Accessibility.getMinDistanceFromZoneToRegion(workZone, regions[i]);
+                    int smallestDistInMin = (int) Accessibility.getAccessibility().getMinDistanceFromZoneToRegion (workZone, regions[i]);
                     workDistanceFactor[i] = workDistanceFactor[i] * Accessibility.getWorkTLFD(smallestDistInMin);
                 }
             }

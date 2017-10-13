@@ -157,11 +157,11 @@ public class Accessibility {
     
 
     public static float getAutoTravelTime(int i, int j) {
-        return hwySkim.getValueAt(i, j);
+	    return getAccessibility().getAutoTravelTime(i,j) ;
     }
 
     public static float getTransitTravelTime(int i, int j) {
-        return transitSkim.getValueAt(i, j);
+	    return getAccessibility().getTransitTravelTime(i,j) ;
     }
 
     public static float getTravelCosts(int i, int j) {
@@ -301,21 +301,29 @@ at de.tum.bgu.msm.data.Accessibility.calculateAccessibilities(Accessibility.java
     }
 
 
-    public static float getMinDistanceFromZoneToRegion (int zone, int region) {
-        return travelTimeToRegion.getValueAt(zone, region);
+    public static Accessibility2 getAccessibility() {
+	    return acc2 ;
     }
+    
+    private static Accessibility2 acc2 = new Accessibility2() ;
+    
+    static class Accessibility2 {
+	    @SuppressWarnings("static-method")
+	float getMinDistanceFromZoneToRegion (int zone, int region) { 
+		    return travelTimeToRegion.getValueAt(zone, region);
+	    }
 
+	    @SuppressWarnings("static-method")
+	    public float getTransitTravelTime(int i, int j) {
+		        return transitSkim.getValueAt(i, j);
+	}
 
-    public static Matrix getHwySkim() {
-        return hwySkim;
+	@SuppressWarnings("static-method")
+	public float getAutoTravelTime(int i, int j) {
+	        return hwySkim.getValueAt(i, j);
+	}
     }
-
-
-    public static Matrix getTransitSkim() {
-        return transitSkim;
-    }
-
-
+	    
 	public static Map<String, TravelTimes> getTravelTimes() {
 		Map<String, TravelTimes> travelTimes = new LinkedHashMap<>();
 		travelTimes.put(TransportMode.car, new MatrixTravelTimes(hwySkim));
