@@ -40,6 +40,9 @@ public class Accessibility {
     static Logger logger = Logger.getLogger(Accessibility.class);
     private ResourceBundle rb;
     private GeoData geoData;
+
+
+
     private Matrix hwySkim;
     private Matrix transitSkim;
     private double[] autoAccessibility;
@@ -314,4 +317,8 @@ at de.tum.bgu.msm.data.Accessibility.calculateAccessibilities(Accessibility.java
 	}
 
     public void updateHwySkim(Matrix hwySkim) { this.hwySkim = hwySkim;}
+
+    public Matrix getHwySkim() {
+        return hwySkim;
+    }
 }

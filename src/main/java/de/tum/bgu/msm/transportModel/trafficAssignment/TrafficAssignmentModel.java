@@ -55,12 +55,12 @@ public class TrafficAssignmentModel {
         configMatsim(numberOfIterations, numberOfThreads);
     }
 
-    public void feedDataToMatsim(Map<Integer, Zone> zones, Matrix autoTravelTimes, Matrix transitTravelTimes, Map<Integer, MitoHousehold> mitoHouseholds){
+    public void feedDataToMatsim(Map<Integer, Zone> zones, Matrix autoTravelTimes, Map<Integer, MitoHousehold> mitoHouseholds){
         //feeds data from silo matsim, it is year-specific - I suggest to combine with the next method load
         this.zones = zones;
         this.mitoHouseholds = mitoHouseholds;
         this.autoTravelTimes = autoTravelTimes;
-        this.transitTravelTimes = transitTravelTimes;
+
     }
 
     public void load(int year){

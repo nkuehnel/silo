@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
 
+import com.pb.common.matrix.Matrix;
 import com.pb.common.util.ResourceUtil;
 import de.tum.bgu.msm.container.SiloModelContainer;
 import org.apache.log4j.Logger;
@@ -22,6 +23,7 @@ import de.tum.bgu.msm.data.travelTimes.TravelTimes;
 import de.tum.bgu.msm.io.input.InputFeed;
 import de.tum.bgu.msm.transportModel.trafficAssignment.TrafficAssignmentModel;
 import org.apache.log4j.Logger;
+import org.matsim.api.core.v01.TransportMode;
 
 import java.util.Map;
 import java.util.ResourceBundle;
@@ -39,7 +41,7 @@ public class MitoTransportModel implements TransportModelI {
 	private final GeoData geoData;
 
 
-    public MitoTransportModel(ResourceBundle mitoRb, ResourceBundle siloRb, String baseDirectory, GeoData geoData, SiloModelContainer modelContainer) {
+    public MitoTransportModel(ResourceBundle siloRb, ResourceBundle mitoRb, String baseDirectory, GeoData geoData, SiloModelContainer modelContainer) {
 		this.mito = new MitoModel(mitoRb);
 		this.geoData = geoData;
 		this.modelContainer = modelContainer;
@@ -58,7 +60,7 @@ public class MitoTransportModel implements TransportModelI {
     	MitoModel.setScenarioName (SiloUtil.scenarioName);
     	updateData();
     	logger.info("  Running travel demand model MITO for the year " + year);
-    	mito.runModel();
+    	//mito.runModel();
 
 		//logger.info("  Running traffic assignment for the year " + year);
         trafficAssignmentModel.load(year);
@@ -95,8 +97,10 @@ public class MitoTransportModel implements TransportModelI {
         logger.info("  SILO data being sent to MITO");
         InputFeed feed = new InputFeed(zones, travelTimes, households);
         mito.feedData(feed);
+
         //check whether feed data is done every run year or only once
-       //trafficAssignmentModel.feedDataToMatsim(zones, hwySkim, transitSkim, households);
+		Matrix travelTimesAsMatrix = modelContainer.getAcc().getHwySkim();
+        trafficAssignmentModel.feedDataToMatsim(zones, travelTimesAsMatrix , households);
 
     }
 
