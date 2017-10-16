@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
 
+import com.pb.common.util.ResourceUtil;
 import de.tum.bgu.msm.container.SiloModelContainer;
 import org.apache.log4j.Logger;
 
@@ -45,10 +46,10 @@ public class MitoTransportModel implements TransportModelI {
 		mito.setRandomNumberGenerator(SiloUtil.getRandomObject());
 		setBaseDirectory(baseDirectory);
 
-/*        trafficAssignmentModel = new TrafficAssignmentModel(siloRb);
+        trafficAssignmentModel = new TrafficAssignmentModel(siloRb);
         trafficAssignmentModel.setup(ResourceUtil.getDoubleProperty(siloRb, "matsim.scaling.factor"),
                 ResourceUtil.getIntegerProperty(siloRb, "matsim.iterations"),
-                ResourceUtil.getIntegerProperty(siloRb, "matsim.threads"));*/
+                ResourceUtil.getIntegerProperty(siloRb, "matsim.threads"));
 
     }
 
