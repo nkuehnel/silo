@@ -110,7 +110,7 @@ public class TrafficAssignmentModel {
         matsimConfig.qsim().setRemoveStuckVehicles(false);
 
         matsimConfig.qsim().setStartTime(0);
-        matsimConfig.qsim().setEndTime(12*60*60);
+        matsimConfig.qsim().setEndTime(24*60*60);
 
         matsimConfig.controler().setFirstIteration(1);
         matsimConfig.controler().setLastIteration(numberOfIterations);
