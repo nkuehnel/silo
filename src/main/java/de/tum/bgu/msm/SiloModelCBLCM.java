@@ -68,7 +68,7 @@ public class SiloModelCBLCM {
 	        timeCounter = new long[EventTypes.values().length + 11][SiloUtil.getEndYear() + 1];
 	        IssueCounter.logIssues(geoData);           // log any potential issues during initial setup
 
-	        transportModel = new MitoTransportModel(rbLandUse, SiloUtil.baseDirectory, geoData, modelContainer);
+	        transportModel = new MitoTransportModel(rbLandUse, rbLandUse, SiloUtil.baseDirectory, geoData, modelContainer);
 	        if (ResourceUtil.getBooleanProperty(rbLandUse, PROPERTIES_CREATE_PRESTO_SUMMARY_FILE, false))
 	            summarizeData.preparePrestoSummary(rbLandUse, geoData);
 	        SiloUtil.initializeRandomNumber();

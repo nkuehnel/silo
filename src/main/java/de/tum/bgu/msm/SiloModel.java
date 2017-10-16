@@ -147,7 +147,7 @@ public class SiloModel {
 		} else {
 			logger.info("  MITO is used as the transport model");
 			File rbFile = new File(ResourceUtil.getProperty(rbLandUse, PROPERTIES_FILE_DEMAND_MODEL));
-			transportModel = new MitoTransportModel(ResourceUtil.getPropertyBundle(rbFile), SiloUtil.baseDirectory, geoData, modelContainer);
+			transportModel = new MitoTransportModel(rbLandUse, ResourceUtil.getPropertyBundle(rbFile), SiloUtil.baseDirectory, geoData, modelContainer);
 		}
 		//        setOldLocalModelVariables();
 		// yy this is where I found setOldLocalModelVariables().  MATSim fails then, since "householdData" then is a null pointer first time when
