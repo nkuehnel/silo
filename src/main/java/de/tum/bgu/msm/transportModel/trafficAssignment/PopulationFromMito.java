@@ -67,7 +67,7 @@ public class PopulationFromMito {
             for (MitoPerson mitoPerson : mitoHousehold.getPersons().values()){
 
 
-                if (mitoPerson.getWorkplace() != -1) {
+                if (mitoPerson.getWorkplace() > 0 ) {
                     //start with HBW trips
                     int homeZone = mitoHousehold.getHomeZone().getZoneId();
                     int workZone = mitoPerson.getWorkplace();
