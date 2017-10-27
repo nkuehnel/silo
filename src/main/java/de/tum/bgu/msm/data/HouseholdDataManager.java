@@ -465,7 +465,11 @@ public class HouseholdDataManager {
             summarizeData.resultFile(f.toString());
         }
         summarizeData.resultFile("aveCommuteDistByRegion,miles");
-        for (int i: geoData.getRegionList()) summarizeData.resultFile(i + "," + commDist[0][i] / commDist[1][i]);
+        for (int i: geoData.getRegionList()) {
+            summarizeData.resultFile(i + "," + commDist[0][i] / commDist[1][i]);
+            logger.warn("Region COMMUTE TIME in munites: " + i + "," + commDist[0][i] / commDist[1][i]);
+        }
+
     }
 
 
