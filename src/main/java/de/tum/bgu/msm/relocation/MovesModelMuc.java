@@ -330,7 +330,7 @@ public class MovesModelMuc implements MovesModelI {
                     double utility = 0;
                     try {
                         utility = regionCalculator.calculate();
-                        utilityRegion[income - 1][nationality.ordinal()][region-1] = utility;
+                        utilityRegion[income - 1][nationality.ordinal()][geoData.getZoneIndex(region)] = utility;
                     } catch (ScriptException e) {
                         e.printStackTrace();
                     }
