@@ -57,6 +57,9 @@ public class MovesModelMuc implements MovesModelI {
     private SelectRegionJSCalculator regionCalculator;
     private SelectDwellingJSCalculator dwellingCalculator;
 
+    private int liveInWorkReg = 0;
+    private int liveInOtherReg = 0;
+
 
     public MovesModelMuc(ResourceBundle rb, GeoData geoData) {
         // constructor
@@ -373,7 +376,11 @@ public class MovesModelMuc implements MovesModelI {
             if (workZones != null) {  // for inmigrating household, work places are selected after household found a home
                 for (int workZone : workZones) {
                     int smallestDistInMin = (int) siloModelContainer.getAcc().getMinDistanceFromZoneToRegion(workZone, regions[i]);
-                    workDistanceFactor[i] = workDistanceFactor[i] * siloModelContainer.getAcc().getWorkTLFD(smallestDistInMin);
+                    if (smallestDistInMin == 0){
+                        workDistanceFactor[i] = 30 * workDistanceFactor[i];
+                    } else {
+                        workDistanceFactor[i] = workDistanceFactor[i] * siloModelContainer.getAcc().getWorkTLFD(smallestDistInMin);
+                    }
                 }
             }
         }
@@ -457,7 +464,7 @@ public class MovesModelMuc implements MovesModelI {
         int[] regions = geoData.getRegionList();
         double[] regionUtilities = getRegionUtilities(ht, householdRace, workZones, modelContainer);
         // todo: adjust probabilities to make that households tend to move shorter distances (dist to work is already represented)
-        String normalizer = "population";
+        String normalizer = "noNormalization";
         int totalVacantDd = 0;
         for (int region: geoData.getRegionList()) totalVacantDd += RealEstateDataManager.getNumberOfVacantDDinRegion(region);
         for (int i = 0; i < regionUtilities.length; i++) {
@@ -485,6 +492,15 @@ public class MovesModelMuc implements MovesModelI {
         }
         if (SiloUtil.getSum(regionUtilities) == 0) return -1;
         int selectedRegion = SiloUtil.select(regionUtilities);
+
+
+        for (int workZone : workZones) {
+            if (geoData.getRegionOfZone(workZone) ==regions[selectedRegion]){
+                liveInWorkReg ++;
+            } else {
+                liveInOtherReg ++;
+            }
+        }
 
         // Step 2: select vacant dwelling in selected region
         int[] vacantDwellings = RealEstateDataManager.getListOfVacantDwellingsInRegion(regions[selectedRegion]);
