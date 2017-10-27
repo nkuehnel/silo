@@ -37,7 +37,7 @@ public class MitoTransportModel implements TransportModelI {
     private static final Logger logger = Logger.getLogger( MitoTransportModel.class );
     private MitoModel mito;
 	private final SiloModelContainer modelContainer;
-    private TrafficAssignmentModel trafficAssignmentModel;
+    //private TrafficAssignmentModel trafficAssignmentModel;
 	private final GeoData geoData;
 
 
@@ -48,10 +48,10 @@ public class MitoTransportModel implements TransportModelI {
 		mito.setRandomNumberGenerator(SiloUtil.getRandomObject());
 		setBaseDirectory(baseDirectory);
 
-        trafficAssignmentModel = new TrafficAssignmentModel(siloRb);
-        trafficAssignmentModel.setup(ResourceUtil.getDoubleProperty(siloRb, "matsim.scaling.factor"),
-                ResourceUtil.getIntegerProperty(siloRb, "matsim.iterations"),
-                ResourceUtil.getIntegerProperty(siloRb, "matsim.threads"));
+        //trafficAssignmentModel = new TrafficAssignmentModel(siloRb);
+       // trafficAssignmentModel.setup(ResourceUtil.getDoubleProperty(siloRb, "matsim.scaling.factor"),
+                //ResourceUtil.getIntegerProperty(siloRb, "matsim.iterations"),
+               // ResourceUtil.getIntegerProperty(siloRb, "matsim.threads"));
 
     }
 
@@ -63,9 +63,9 @@ public class MitoTransportModel implements TransportModelI {
     	//mito.runModel();
 
 		//logger.info("  Running traffic assignment for the year " + year);
-        trafficAssignmentModel.load(year);
+        //trafficAssignmentModel.load(year);
 
-        modelContainer.getAcc().updateHwySkim(trafficAssignmentModel.runTrafficAssignmentToGetTravelTimeMatrix());
+        //modelContainer.getAcc().updateHwySkim(trafficAssignmentModel.runTrafficAssignmentToGetTravelTimeMatrix());
 
 
     }
@@ -100,7 +100,7 @@ public class MitoTransportModel implements TransportModelI {
 
         //check whether feed data is done every run year or only once
 		Matrix travelTimesAsMatrix = modelContainer.getAcc().getHwySkim();
-        trafficAssignmentModel.feedDataToMatsim(zones, travelTimesAsMatrix , households);
+        //trafficAssignmentModel.feedDataToMatsim(zones, travelTimesAsMatrix , households);
 
     }
 
