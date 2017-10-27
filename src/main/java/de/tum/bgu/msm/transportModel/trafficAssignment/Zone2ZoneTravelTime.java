@@ -99,6 +99,7 @@ public class Zone2ZoneTravelTime implements IterationEndsListener {
                     //nex line to fill only half matrix and use half time
                     if (orig <= dest) {
 
+                        //todo this is getting 0 for intrazonals
 
                         Node destinationNode = zoneCalculationNodesMap.get(dest);
 
