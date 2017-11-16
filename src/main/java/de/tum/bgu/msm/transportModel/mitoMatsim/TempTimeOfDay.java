@@ -1,4 +1,4 @@
-package de.tum.bgu.msm.transportModel.trafficAssignment;
+package de.tum.bgu.msm.transportModel.mitoMatsim;
 
 import com.pb.common.datafile.TableDataSet;
 import de.tum.bgu.msm.SiloUtil;

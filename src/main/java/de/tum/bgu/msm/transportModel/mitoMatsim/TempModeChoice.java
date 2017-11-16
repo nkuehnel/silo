@@ -1,13 +1,10 @@
-package de.tum.bgu.msm.transportModel.trafficAssignment;
+package de.tum.bgu.msm.transportModel.mitoMatsim;
 
-import com.pb.common.datafile.TableDataSet;
 import com.pb.common.matrix.Matrix;
 import de.tum.bgu.msm.SiloUtil;
 import omx.OmxFile;
 import omx.OmxMatrix;
-import org.apache.commons.math3.distribution.EnumeratedIntegerDistribution;
 
-import java.util.Arrays;
 import java.util.ResourceBundle;
 
 //temporary mode choice model, it won't be used when mito trips have selected mode

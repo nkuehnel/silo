@@ -3,9 +3,11 @@ package de.tum.bgu.msm;
  * 
  */
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ResourceBundle;
 
+import com.pb.common.util.ResourceUtil;
 import de.tum.bgu.msm.SiloModel.Implementation;
 import de.tum.bgu.msm.container.SiloDataContainer;
 import de.tum.bgu.msm.container.SiloModelContainer;
@@ -74,7 +76,9 @@ public class SiloModelCBLCM {
 	        timeCounter = new long[EventTypes.values().length + 11][SiloUtil.getEndYear() + 1];
 	        IssueCounter.logIssues(geoData);           // log any potential issues during initial setup
 
-	        transportModel = new MitoTransportModel(rbLandUse, SiloUtil.baseDirectory, geoData, modelContainer);
+			File rbFile = new File(properties.getTransportModelProperties().getDemandModelPropertiesPath());
+
+	        transportModel = new MitoTransportModel(rbLandUse, ResourceUtil.getPropertyBundle(rbFile), SiloUtil.baseDirectory, geoData, modelContainer);
 	        if (properties.getMainProperties().isCreatePrestoSummary()) {
 				summarizeData.preparePrestoSummary(rbLandUse, geoData);
 			}

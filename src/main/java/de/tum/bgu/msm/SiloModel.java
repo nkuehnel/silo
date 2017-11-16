@@ -108,7 +108,8 @@ public class SiloModel {
 			modelContainer.getAcc().readCarSkim(SiloUtil.getStartYear());
 			modelContainer.getAcc().readPtSkim(SiloUtil.getStartYear());
 			File rbFile = new File(properties.getTransportModelProperties().getDemandModelPropertiesPath());
-			transportModel = new MitoTransportModel(ResourceUtil.getPropertyBundle(rbFile), SiloUtil.baseDirectory, dataContainer.getGeoData(), modelContainer);
+			transportModel = new MitoTransportModel(rbLandUse, ResourceUtil.getPropertyBundle(rbFile), SiloUtil.baseDirectory, dataContainer.getGeoData(), modelContainer);
+
 		}
 		modelContainer.getAcc().initialize();
 		modelContainer.getAcc().calculateAccessibilities(SiloUtil.getStartYear());
@@ -283,7 +284,7 @@ public class SiloModel {
 
 			if ( runMatsim || runTravelDemandModel || properties.getMainProperties().isCreateMstmOutput()) {
                 if (SiloUtil.containsElement(tdmYears, year + 1)) {
-                transportModel.runTransportModel(year + 1);
+                	transportModel.runTransportModel(year + 1);
                     modelContainer.getAcc().calculateAccessibilities(year + 1);
                 }
             }

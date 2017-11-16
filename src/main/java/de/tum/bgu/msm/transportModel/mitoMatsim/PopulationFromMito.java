@@ -1,10 +1,11 @@
-package de.tum.bgu.msm.transportModel.trafficAssignment;
+package de.tum.bgu.msm.transportModel.mitoMatsim;
 
 import com.pb.common.matrix.Matrix;
 import de.tum.bgu.msm.SiloUtil;
 import de.tum.bgu.msm.data.MitoHousehold;
 import de.tum.bgu.msm.data.MitoPerson;
 import de.tum.bgu.msm.data.Zone;
+import de.tum.bgu.msm.data.travelTimes.TravelTimes;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
@@ -29,7 +30,7 @@ public class PopulationFromMito {
     private TrafficAssignmentUtil trafficAssignmentUtil;
     private Plan matsimPlan;
     private double scalingFactor;
-    private Matrix autoTravelTime;
+    private TravelTimes autoTravelTimes;
     private TempModeChoice tempModeChoice;
     private TempTimeOfDay tempTimeOfDay;
 
@@ -50,9 +51,11 @@ public class PopulationFromMito {
         tempTimeOfDay.setup(trafficAssignmentDirectory);
     }
 
-    public Population createPopulationFromMito(Map<Integer, MitoHousehold> households, Matrix autoTravelTime, Matrix transitTravelTime, Map<Integer, Zone> zones, int year){
+    public Population createPopulationFromMito(Map<Integer, MitoHousehold> households, TravelTimes autoTravelTimes, Map<Integer, Zone> zones, int year){
 
-        this.autoTravelTime = autoTravelTime;
+        logger.info("starting conversion of MITO households to MATSim hbw trips");
+
+        this.autoTravelTimes = autoTravelTimes;
 
         Config matsimConfig = ConfigUtils.createConfig();
         Scenario matsimScenario = ScenarioUtils.createScenario(matsimConfig);
@@ -87,9 +90,9 @@ public class PopulationFromMito {
                     }
                 }
             }
-
         }
 
+        logger.info("MATSim population already created");
         boolean writePopulation = true;
         if (writePopulation){
             new File(trafficAssignmentDirectory + "output/").mkdir();
@@ -104,19 +107,19 @@ public class PopulationFromMito {
 
     public void addTripsToWork(int homeZone, int workZone){
 
-        double time = 0;
+        double time;
 
         time = tempTimeOfDay.selectDepartureTimeToWork();
 
-        Coord homeCoord = trafficAssignmentUtil.getZoneCoordinates(homeZone);
+        Coord homeCoord = trafficAssignmentUtil.getRandomZoneCoordinates(homeZone);
         Activity activity1 = matsimPopulationFactory.createActivityFromCoord("home", homeCoord);
         activity1.setEndTime(time);
         matsimPlan.addActivity(activity1);
         matsimPlan.addLeg(matsimPopulationFactory.createLeg(TransportMode.car));
 
-        time += tempTimeOfDay.selectWorkDuration() + autoTravelTime.getValueAt(homeZone, workZone);
+        time += tempTimeOfDay.selectWorkDuration() + autoTravelTimes.getTravelTimeFromTo(homeZone, workZone);
 
-        Coord workCoord = trafficAssignmentUtil.getZoneCoordinates(workZone);
+        Coord workCoord = trafficAssignmentUtil.getRandomZoneCoordinates(workZone);
         Activity activity2 = matsimPopulationFactory.createActivityFromCoord("work", workCoord);
         activity2.setEndTime(time);
         matsimPlan.addActivity(activity2);

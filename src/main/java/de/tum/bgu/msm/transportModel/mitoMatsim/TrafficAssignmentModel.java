@@ -1,17 +1,22 @@
-package de.tum.bgu.msm.transportModel.trafficAssignment;
+package de.tum.bgu.msm.transportModel.mitoMatsim;
 
 import com.pb.common.matrix.Matrix;
 import de.tum.bgu.msm.data.MitoHousehold;
 import de.tum.bgu.msm.data.Zone;
+import de.tum.bgu.msm.data.travelTimes.TravelTimes;
+import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.population.Population;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.*;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy;
+import org.matsim.core.router.util.TravelDisutility;
+import org.matsim.core.router.util.TravelTime;
 import org.matsim.core.scenario.MutableScenario;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.utils.geometry.transformations.TransformationFactory;
+import org.matsim.utils.leastcostpathtree.LeastCostPathTree;
 
 import java.util.Map;
 import java.util.ResourceBundle;
@@ -24,12 +29,10 @@ public class TrafficAssignmentModel {
     private MutableScenario matsimScenario;
     private Population matsimPopulation;
     private Map<Integer, Zone> zones;
-    private Matrix autoTravelTimes;
-    private Matrix transitTravelTimes;
+    private TravelTimes autoTravelTimes;
     private Map<Integer, MitoHousehold> mitoHouseholds;
     private double scalingFactor;
-    private int numberOfIterations;
-    private int numberOfThreads;
+
 
     private PopulationFromMito populationFromMito;
 
@@ -41,66 +44,53 @@ public class TrafficAssignmentModel {
     }
 
     public void setup(double scalingFactor, int numberOfIterations, int numberOfThreads){
-
         trafficAssignmentDirectory = rb.getString("matsim.directory");
         //create common configuration parameters for every year
         trafficAssignmentUtil.setup(trafficAssignmentDirectory);
         trafficAssignmentUtil.readCoordinateData();
-        this.numberOfIterations = numberOfIterations;
         this.scalingFactor = scalingFactor;
-        this.numberOfThreads = numberOfThreads;
         populationFromMito.setup(scalingFactor, trafficAssignmentUtil, trafficAssignmentDirectory);
-
-
         configMatsim(numberOfIterations, numberOfThreads);
     }
 
-    public void feedDataToMatsim(Map<Integer, Zone> zones, Matrix autoTravelTimes, Map<Integer, MitoHousehold> mitoHouseholds){
+    public void feedDataToMatsim(Map<Integer, Zone> zones, Map<Integer, MitoHousehold> mitoHouseholds, TravelTimes travelTimes){
         //feeds data from silo matsim, it is year-specific - I suggest to combine with the next method load
         this.zones = zones;
         this.mitoHouseholds = mitoHouseholds;
-        this.autoTravelTimes = autoTravelTimes;
+        this.autoTravelTimes = travelTimes;
+
 
     }
 
     public void load(int year){
         //configure year-specific parameters
-        //todo only 2 networks before and after certain year - 2030 in the test
-        String networkFile;
-        if (year < 2030) {
-            networkFile = trafficAssignmentDirectory + rb.getString("matsim.network.2000");
-        } else {
-            networkFile = trafficAssignmentDirectory + rb.getString("matsim.network.2030");
-        }
 
+        String networkFile = trafficAssignmentDirectory + rb.getString("matsim.network");
         matsimConfig.network().setInputFile(networkFile);
 
         //creates a matsim scenario and the population from mito households/persons/trips
         matsimScenario = (MutableScenario) ScenarioUtils.loadScenario(matsimConfig);
         matsimConfig.controler().setOutputDirectory(trafficAssignmentDirectory + "output/" + year);
-        matsimConfig.controler().setRunId("trafficAssignment" + year);
-        matsimPopulation = populationFromMito.createPopulationFromMito(mitoHouseholds,  autoTravelTimes, transitTravelTimes, zones, year);
+        matsimConfig.controler().setRunId("mitoMatsim" + year);
+        matsimPopulation = populationFromMito.createPopulationFromMito(mitoHouseholds,  autoTravelTimes, zones, year);
         matsimScenario.setPopulation(matsimPopulation);
 
     }
 
-    public Matrix runTrafficAssignmentToGetTravelTimeMatrix(){
+    public TravelTimes runTrafficAssignment(){
         //run matsim for the selected year
         final Controler controler = new Controler(matsimScenario);
-        Zone2ZoneTravelTime zone2ZoneTravelTime = new Zone2ZoneTravelTime(autoTravelTimes, controler, matsimScenario.getNetwork(),
-                numberOfIterations, zones, 8*60*60, 1 , trafficAssignmentUtil );
-        controler.addControlerListener(zone2ZoneTravelTime);
         controler.run();
-        return zone2ZoneTravelTime.getAutoTravelTime();
+        //get travel times object
+        TravelTime travelTime = controler.getLinkTravelTimes();
+        TravelDisutility travelDisutility = controler.getTravelDisutilityFactory().createTravelDisutility(travelTime);
+        LeastCostPathTree leastCoastPathTree = new LeastCostPathTree(travelTime, travelDisutility);
+        return new MitoMatsimTravelTimes(leastCoastPathTree, matsimScenario.getNetwork(), trafficAssignmentUtil, zones);
     }
 
 
 
-
-
     public void configMatsim(int numberOfIterations, int numberOfThreads){
-
-
 
         matsimConfig = ConfigUtils.createConfig();
         matsimConfig.global().setCoordinateSystem(TransformationFactory.DHDN_GK4);
@@ -142,14 +132,6 @@ public class TrafficAssignmentModel {
         strategySettings3.setDisableAfter((int) (numberOfIterations * 0.7));
         matsimConfig.strategy().addStrategySettings(strategySettings3);
 
-        //TODO this strategy is implemented to test the pt modes (in general do not include)
-//        StrategyConfigGroup.StrategySettings strategySettings4 = new StrategyConfigGroup.StrategySettings();
-//        strategySettings4.setStrategyName("ChangeTripMode");
-//        strategySettings4.setWeight(0); //originally 0
-//        strategySettings4.setDisableAfter((int) (numberOfIterations * 0.7));
-//        config.strategy().addStrategySettings(strategySettings4);
-
-
         matsimConfig.strategy().setMaxAgentPlanMemorySize(4);
 
         // Plan Scoring (planCalcScore)
@@ -167,11 +149,7 @@ public class TrafficAssignmentModel {
         matsimConfig.parallelEventHandling().setNumberOfThreads(numberOfThreads);
         matsimConfig.qsim().setUsingThreadpool(false);
 
-
         matsimConfig.vspExperimental().setVspDefaultsCheckingLevel(VspExperimentalConfigGroup.VspDefaultsCheckingLevel.warn);
-
-        // Scenario //chose between population file and population creator in java
-
 
     }
 
