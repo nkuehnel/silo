@@ -7,18 +7,11 @@ import java.util.ResourceBundle;
 import com.pb.common.matrix.Matrix;
 import com.pb.common.util.ResourceUtil;
 import de.tum.bgu.msm.container.SiloModelContainer;
+import de.tum.bgu.msm.data.*;
 import org.apache.log4j.Logger;
 
 import de.tum.bgu.msm.MitoModel;
 import de.tum.bgu.msm.SiloUtil;
-import de.tum.bgu.msm.data.Accessibility;
-import de.tum.bgu.msm.data.GeoData;
-import de.tum.bgu.msm.data.Household;
-import de.tum.bgu.msm.data.MitoHousehold;
-import de.tum.bgu.msm.data.MitoPerson;
-import de.tum.bgu.msm.data.Person;
-import de.tum.bgu.msm.data.Zone;
-import de.tum.bgu.msm.data.summarizeData;
 import de.tum.bgu.msm.data.travelTimes.TravelTimes;
 import de.tum.bgu.msm.io.input.InputFeed;
 import de.tum.bgu.msm.transportModel.trafficAssignment.TrafficAssignmentModel;
@@ -70,10 +63,11 @@ public class MitoTransportModel implements TransportModelI {
 
     }
     
-    public void updateData() {
+    private void updateData() {
     	Map<Integer, Zone> zones = new HashMap<>();
 		for (int i = 0; i < geoData.getZones().length; i++) {
-			Zone zone = new Zone(geoData.getZones()[i], geoData.getSizeOfZonesInAcres()[i]);
+			AreaType areaType = AreaType.RURAL; //TODO: put real area type in here
+			Zone zone = new Zone(geoData.getZones()[i], geoData.getSizeOfZonesInAcres()[i], areaType);
 			zone.setRetailEmpl(summarizeData.getRetailEmploymentByZone(geoData)[i]);
 			zone.setOfficeEmpl(summarizeData.getOfficeEmploymentByZone(geoData)[i]);
 			zone.setOtherEmpl(summarizeData.getOtherEmploymentByZone(geoData)[i]);

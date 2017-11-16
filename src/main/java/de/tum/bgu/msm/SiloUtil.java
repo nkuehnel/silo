@@ -14,6 +14,7 @@ import de.tum.bgu.msm.data.summarizeData;
 import de.tum.bgu.msm.data.summarizeDataCblcm;
 import de.tum.bgu.msm.events.EventTypes;
 import de.tum.bgu.msm.events.IssueCounter;
+import de.tum.bgu.msm.properties.Properties;
 import de.tum.bgu.msm.utils.TableDataFileReader2;
 import omx.OmxMatrix;
 import omx.hdf5.OmxHdf5Datatype;
@@ -81,9 +82,9 @@ public class SiloUtil {
         summarizeData.openResultFile(rb);
         summarizeData.resultFileSpatial(rb, "open");
 
-        // create scenario output directory if it does not exist yet
+        // create scenarios output directory if it does not exist yet
         createDirectoryIfNotExistingYet(baseDirectory + "scenOutput/" + scenarioName);
-        // copy properties file into scenario directory
+        // copy properties file into scenarios directory
         String[] prop = resourceBundleNames.split("/");
 
 //        copyFile(baseDirectory + resourceBundleNames[0], baseDirectory + "scenOutput/" + scenarioName + "/" + prop[prop.length-1]);
@@ -109,7 +110,7 @@ public class SiloUtil {
         if (!file.exists()) {
             logger.info("   Creating Directory: "+directory);
             boolean outputDirectorySuccessfullyCreated = file.mkdir();
-            if (!outputDirectorySuccessfullyCreated) logger.error("Could not create scenario directory " + directory);
+            if (!outputDirectorySuccessfullyCreated) logger.error("Could not create scenarios directory " + directory);
         }
     }
 
@@ -773,6 +774,15 @@ public class SiloUtil {
         return found;
     }
 
+    public static double sumProduct(double[] a, int[] b){
+        double sum = 0;
+        for (int i = 0; i < a.length; i++){
+            sum = sum + a[i]*b[i];
+        }
+
+
+        return sum;
+    }
 
     public static void deleteFile (String fileName) {
         // delete file with name fileName
@@ -788,7 +798,7 @@ public class SiloUtil {
         try {
             Files.copy(src.toPath(), dst.toPath(), REPLACE_EXISTING);
         } catch (Exception e) {
-            final String msg = "Unable to copy properties file " + source + " to scenario output directory.";
+            final String msg = "Unable to copy properties file " + source + " to scenarios output directory.";
 		logger.warn(msg);
             throw new RuntimeException(msg) ;
             // need to throw exception since otherwise the code will not fail here but at some point later.  kai, aug'16
@@ -943,7 +953,7 @@ public class SiloUtil {
     }
 
 
-static void closeAllFiles (long startTime, ResourceBundle rbLandUse) {
+static void closeAllFiles (long startTime, ResourceBundle rbLandUse, Properties properties) {
 	// run this method whenever SILO closes, regardless of whether SILO completed successfully or SILO crashed
 	trackingFile("close");
 	summarizeData.resultFile("close");
@@ -952,8 +962,8 @@ static void closeAllFiles (long startTime, ResourceBundle rbLandUse) {
 	int hours = (int) (endTime / 60);
 	int min = (int) (endTime - 60 * hours);
 	SiloModel.logger.info("Runtime: " + hours + " hours and " + min + " minutes.");
-	if (ResourceUtil.getBooleanProperty(rbLandUse, SiloModel.PROPERTIES_TRACK_TIME, false)) {
-		String fileName = rbLandUse.getString(SiloModel.PROPERTIES_TRACK_TIME_FILE);
+	if (properties.getMainProperties().isTrackTime()) {
+		String fileName = properties.getMainProperties().getTrackTimeFile();
 		try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(fileName, true)))) {
 			out.println("Runtime: " + hours + " hours and " + min + " minutes.");
 			out.close();
@@ -983,7 +993,7 @@ static boolean modelStopper (String action) {
 
 
 static void summarizeMicroData (int year, SiloModelContainer modelContainer, SiloDataContainer dataContainer,
-		GeoData geoData, ResourceBundle rbLandUse ) {
+		ResourceBundle rbLandUse, Properties properties ) {
 	// "static" so it can also be used from SiloModelCBLCM.  nico/kai/dominik, oct'17
 
 
@@ -995,34 +1005,36 @@ static void summarizeMicroData (int year, SiloModelContainer modelContainer, Sil
 
 
 	summarizeData.resultFile("Year " + year, false);
-	HouseholdDataManager.summarizePopulation(geoData, modelContainer);
+	HouseholdDataManager.summarizePopulation(dataContainer.getGeoData(), modelContainer);
 	dataContainer.getRealEstateData().summarizeDwellings();
-	dataContainer.getJobData().summarizeJobs(geoData.getRegionList());
+	dataContainer.getJobData().summarizeJobs(dataContainer.getGeoData().getRegionList());
 
 	summarizeData.resultFileSpatial(rbLandUse, "Year " + year, false);
 	summarizeData.summarizeSpatially(year, modelContainer, dataContainer);
-	if (ResourceUtil.getBooleanProperty(rbLandUse, SiloModel.PROPERTIES_CREATE_CBLCM_FILES, false))
-		summarizeDataCblcm.createCblcmSummaries(rbLandUse, year, modelContainer, dataContainer);
-	if (ResourceUtil.getBooleanProperty(rbLandUse, SiloModel.PROPERTIES_CREATE_HOUSING_ENV_IMPACT_FILE, false))
-		summarizeData.summarizeHousing(rbLandUse, year);
-	if (ResourceUtil.getBooleanProperty(rbLandUse, SiloModel.PROPERTIES_CREATE_PRESTO_SUMMARY_FILE, false)) {
+	if (properties.getCblcmProperties().isCreateCblcmFiles()) {
+        summarizeDataCblcm.createCblcmSummaries(rbLandUse, year, modelContainer, dataContainer);
+    }
+	if (properties.getMainProperties().isCreateHousingEnvironmentImpactFile()) {
+        summarizeData.summarizeHousing(rbLandUse, year);
+    }
+	if (properties.getMainProperties().isCreatePrestoSummary()) {
 		summarizeData.summarizePrestoRegion(rbLandUse, year);
 	}
 
 }
 
 
-static void writeOutTimeTracker (long[][] timeCounter, ResourceBundle rbLandUse ) {
+static void writeOutTimeTracker (long[][] timeCounter, Properties properties) {
 	// write file summarizing run times
 
 	int startYear = getStartYear();
-	PrintWriter pw = openFileForSequentialWriting(rbLandUse.getString(SiloModel.PROPERTIES_TRACK_TIME_FILE), startYear != getBaseYear());
+	PrintWriter pw = openFileForSequentialWriting(properties.getMainProperties().getTrackTimeFile(), startYear != getBaseYear());
 	if (startYear == getBaseYear()) {
 		pw.print("Year");
 		for (EventTypes et : EventTypes.values()) pw.print("," + et.toString());
 		pw.print(",setupInOutMigration,setupConstructionOfNewDwellings,updateJobInventory,setupJobChange," +
 				"setupListOfEvents,fillMarriageMarket,calcAveHousingSatisfaction,summarizeData,updateRealEstatePrices," +
-				"planIncomeChange,addOverwriteDwellings");
+				"planIncomeChange,addOverwriteDwellings,updateCarOwnership");
 		pw.println();
 	}
 	for (int year = startYear; year < getEndYear(); year += getSimulationLength()) {
@@ -1042,11 +1054,9 @@ static void writeOutTimeTracker (long[][] timeCounter, ResourceBundle rbLandUse 
 		pw.print("," + timeCounter[EventTypes.values().length + 8][year] / 60000f);   // update real estate prices
 		pw.print("," + timeCounter[EventTypes.values().length + 9][year] / 60000f);   // plan income change
 		pw.print("," + timeCounter[EventTypes.values().length + 10][year] / 60000f);  // add dwellings from overwrite
+        pw.print("," + timeCounter[EventTypes.values().length + 11][year] / 60000f);  // add or relinquish cars
 		pw.println();
 	}
 	pw.close();
 }
-
-
-
 }

@@ -402,6 +402,7 @@ public class MovesModelMuc implements MovesModelI {
         if (idNewDD > 0) {
             moveHousehold(hh, hh.getDwellingId(), idNewDD, dataContainer);    // Step 3: Move household
             EventManager.countEvent(EventTypes.householdMove);
+            dataContainer.getHouseholdData().addHouseholdThatMoved(hh);
             if (hhId == SiloUtil.trackHh) SiloUtil.trackWriter.println("Household " + hhId + " has moved to dwelling " +
                     Household.getHouseholdFromId(hhId).getDwellingId());
         } else {
@@ -431,7 +432,7 @@ public class MovesModelMuc implements MovesModelI {
     private boolean isHouseholdEligibleToLiveHere(Household hh, Dwelling dd) {
         // Check if dwelling is restricted, if so check if household is still eligible to live in this dwelling (household income could exceed eligibility criterion)
         if (dd.getRestriction() <= 0) return true;   // Dwelling is not income restricted
-        int msa = geoDataMstm.getMSAOfZone(dd.getZone());
+        int msa = GeoDataMstm.getMSAOfZone(dd.getZone());
         return hh.getHhIncome() <= (HouseholdDataManager.getMedianIncome(msa) * dd.getRestriction());
     }
 

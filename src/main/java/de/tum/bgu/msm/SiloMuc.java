@@ -1,9 +1,8 @@
 package de.tum.bgu.msm;
 
-import com.pb.common.util.ResourceUtil;
-import de.tum.bgu.msm.SyntheticPopulationGenerator.SyntheticPopDe;
-import de.tum.bgu.msm.data.geoDataMuc;
 import de.tum.bgu.msm.data.summarizeData;
+import de.tum.bgu.msm.properties.Properties;
+import de.tum.bgu.msm.syntheticPopulationGenerator.SyntheticPopulationGenerator;
 import org.apache.log4j.Logger;
 
 import java.io.BufferedWriter;
@@ -31,15 +30,14 @@ public class SiloMuc {
 
         SiloUtil.setBaseYear(2011);  // Base year is defined by available input data for synthetic population
         ResourceBundle rb = SiloUtil.siloInitialization(args[0]);
+        Properties properties = new Properties(rb);
         long startTime = System.currentTimeMillis();
         try {
             logger.info("Starting SILO land use model for the Munich Metropolitan Area");
             logger.info("Scenario: " + SiloUtil.scenarioName + ", Simulation start year: " + SiloUtil.getStartYear());
-            SyntheticPopDe sp = new SyntheticPopDe(rb);
-            sp.runSP();
-           /*ExtractDataDE de = new ExtractDataDE(rb);
-            de.runSP(); */
-            SiloModel model = new SiloModel(rb);
+            SyntheticPopulationGenerator sp = new SyntheticPopulationGenerator(rb);
+            sp.run();
+            SiloModel model = new SiloModel(rb, properties);
             model.runModel(SiloModel.Implementation.MUC);
             logger.info("Finished SILO.");
         } catch (Exception e) {
@@ -53,8 +51,8 @@ public class SiloMuc {
             int hours = (int) (endTime / 60);
             int min = (int) (endTime - 60 * hours);
             logger.info("Runtime: " + hours + " hours and " + min + " minutes.");
-            if (ResourceUtil.getBooleanProperty(rb, SiloModel.PROPERTIES_TRACK_TIME, false)) {
-                String fileName = rb.getString(SiloModel.PROPERTIES_TRACK_TIME_FILE);
+            if (properties.getMainProperties().isTrackTime()) {
+                String fileName = properties.getMainProperties().getTrackTimeFile();
                 try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(fileName, true)))) {
                     out.println("Runtime: " + hours + " hours and " + min + " minutes.");
                     out.close();

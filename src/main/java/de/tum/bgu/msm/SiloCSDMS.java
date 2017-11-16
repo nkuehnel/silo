@@ -1,6 +1,6 @@
 package de.tum.bgu.msm;
 
-import de.tum.bgu.msm.SyntheticPopulationGenerator.SyntheticPopUs;
+import de.tum.bgu.msm.properties.Properties;
 import org.apache.log4j.Logger;
 
 import java.util.ResourceBundle;
@@ -19,6 +19,7 @@ public class SiloCSDMS {
     private static  SiloModelCBLCM model;
     private static  long startTime;
     private static  ResourceBundle rb ;
+    private static Properties properties;
 
     public static void main (String args) {
         // main run method
@@ -61,6 +62,7 @@ public class SiloCSDMS {
 
         logger.info("Starting SILO Initialization for MSTM with CSDMS Integration");
         rb = SiloUtil.siloInitialization(configFile);
+        properties = new Properties(rb);
         SiloUtil.setBaseYear(2000);
         logger.info("Scenario: " + SiloUtil.scenarioName + ", Simulation start year: " + SiloUtil.getStartYear());
         startTime = System.currentTimeMillis();
@@ -77,7 +79,7 @@ public class SiloCSDMS {
             model.runYear(dt);
         } catch (Exception e) {
             logger.error("Error running SILO.");
-            SiloUtil.closeAllFiles(startTime, rb);
+            SiloUtil.closeAllFiles(startTime, rb, properties);
             throw new RuntimeException(e);
         }
     }
@@ -92,7 +94,7 @@ public class SiloCSDMS {
 			e.printStackTrace();
 			//throw e;
 		}
-    	SiloUtil.closeAllFiles(startTime,rb);
+    	SiloUtil.closeAllFiles(startTime,rb, properties);
         logger.info("Finished SILO.");
     }
 }

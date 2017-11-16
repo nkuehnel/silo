@@ -36,7 +36,7 @@ import org.matsim.core.config.Config;
 import com.pb.common.datafile.TableDataSet;
 import com.pb.common.util.ResourceUtil;
 
-import de.tum.bgu.msm.autoOwnership.AutoOwnershipModel;
+import de.tum.bgu.msm.autoOwnership.MaryLandCarOwnershipModel;
 import de.tum.bgu.msm.demography.BirthModel;
 import de.tum.bgu.msm.demography.ChangeEmploymentModel;
 import de.tum.bgu.msm.demography.DeathModel;
@@ -65,11 +65,11 @@ public class SiloModelBak {
     public ResourceBundle rb;
     public static Random rand;
 
-    protected static final String PROPERTIES_RUN_SILO                       = "run.silo.model";
+    protected static final String RUN_SILO                       = "run.silo.model";
     protected static final String PROPERTIES_SCALING_YEARS                  = "scaling.years";
     protected static final String PROPERTIES_TRANSPORT_MODEL_YEARS          = "transport.model.years";
     protected static final String PROPERTIES_TRANSPORT_SKIM_YEARS           = "skim.years";
-    public static final String PROPERTIES_TRACK_TIME                        = "track.time";
+    public static final String TRACK_TIME                        = "track.time";
     public static final String PROPERTIES_TRACK_TIME_FILE                   = "track.time.file";
     protected static final String PROPERTIES_CREATE_CBLCM_FILES             = "create.cblcm.files";
     protected static final String PROPERTIES_CREATE_HOUSING_ENV_IMPACT_FILE = "create.housing.environm.impact.files";
@@ -97,7 +97,7 @@ public class SiloModelBak {
     private MovesModelMstm move;
     private ChangeEmploymentModel changeEmployment;
     private Accessibility accessibility;
-    private AutoOwnershipModel aoModel;
+    private MaryLandCarOwnershipModel aoModel;
     private MstmTransportModel TransportModel;
     private UpdateJobs updateJobs;
     private int[] skimYears;
@@ -124,7 +124,7 @@ public class SiloModelBak {
     public void runModel() {
         //Main method to run a SILO model
 
-        if (!ResourceUtil.getBooleanProperty(rb, PROPERTIES_RUN_SILO)) return;
+        if (!ResourceUtil.getBooleanProperty(rb, RUN_SILO)) return;
 
         logger.info("Start SILO Model");
 
@@ -171,10 +171,10 @@ public class SiloModelBak {
         DemolitionModel demol = new DemolitionModel(rb);
         PricingModel prm = new PricingModel(rb);
         UpdateJobs updateJobs = new UpdateJobs(rb);
-        AutoOwnershipModel aoModel = new AutoOwnershipModel(rb);
+        MaryLandCarOwnershipModel aoModel = new MaryLandCarOwnershipModel(rb);
         ConstructionOverwrite ddOverwrite = new ConstructionOverwrite(rb);
 
-        boolean trackTime = ResourceUtil.getBooleanProperty(rb, PROPERTIES_TRACK_TIME, false);
+        boolean trackTime = ResourceUtil.getBooleanProperty(rb, TRACK_TIME, false);
         long[][] timeCounter = new long[EventTypes.values().length + 11][SiloUtil.getEndYear() + 1];
         long startTime = 0;
         IssueCounter.logIssues(geoData);           // log any potential issues during initial setup
@@ -406,10 +406,10 @@ public class SiloModelBak {
         demol = new DemolitionModel(rb);
         prm = new PricingModel(rb);
         updateJobs = new UpdateJobs(rb);
-        aoModel = new AutoOwnershipModel(rb);
+        aoModel = new MaryLandCarOwnershipModel(rb);
         ddOverwrite = new ConstructionOverwrite(rb);
 
-        trackTime = ResourceUtil.getBooleanProperty(rb, PROPERTIES_TRACK_TIME, false);
+        trackTime = ResourceUtil.getBooleanProperty(rb, TRACK_TIME, false);
         timeCounter = new long[EventTypes.values().length + 11][SiloUtil.getEndYear() + 1];
         IssueCounter.logIssues(geoData);           // log any potential issues during initial setup
 
@@ -611,7 +611,7 @@ public class SiloModelBak {
         int hours = (int) (endTime / 60);
         int min = (int) (endTime - 60 * hours);
         logger.info("Runtime: " + hours + " hours and " + min + " minutes.");
-        if (ResourceUtil.getBooleanProperty(rb, SiloModel.PROPERTIES_TRACK_TIME, false)) {
+        if (ResourceUtil.getBooleanProperty(rb, SiloModel.TRACK_TIME, false)) {
             String fileName = rb.getString(SiloModel.PROPERTIES_TRACK_TIME_FILE);
             try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(fileName, true)))) {
                 out.println("Runtime: " + hours + " hours and " + min + " minutes.");

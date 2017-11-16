@@ -997,7 +997,7 @@ public class summarizeData {
         for (Household hh: Household.getHouseholdArray()) {
             int autoOwnership = hh.getAutos();
             int zone = hh.getHomeZone();
-            int county = geoDataMstm.getCountyOfZone(zone);
+            int county = GeoDataMstm.getCountyOfZone(zone);
             autos[autoOwnership][county]++;
             pwa.println(hh.getHhSize()+","+hh.getNumberOfWorkers()+","+hh.getHhIncome()+","+
                     accessibility.getTransitAccessibility(zone)+","+jobData.getJobDensityInZone(zone)+","+hh.getAutos());
@@ -1028,7 +1028,7 @@ public class summarizeData {
         for (int zone: geoData.getZones()) {
             try {
                 prestoRegionByTaz[zone] =
-                        (int) regionDefinition.getIndexedValueAt(geoDataMstm.getCountyOfZone(zone), "presto");
+                        (int) regionDefinition.getIndexedValueAt(GeoDataMstm.getCountyOfZone(zone), "presto");
             } catch (Exception e) {
                 prestoRegionByTaz[zone] = -1;
             }
@@ -1138,7 +1138,8 @@ public class summarizeData {
     public static void summarizeCarOwnershipByMunicipality(TableDataSet zonalData) {
         // This calibration function summarizes household auto-ownership by municipality and quits
 
-        PrintWriter pwa = SiloUtil.openFileForSequentialWriting("microData/interimFiles/carOwnershipA.csv", false);
+        SiloUtil.createDirectoryIfNotExistingYet("microData/interimFiles/");
+        PrintWriter pwa = SiloUtil.openFileForSequentialWriting("microData/interimFiles/carOwnershipByHh.csv", false);
         pwa.println("license,workers,income,logDistanceToTransit,areaType,autos");
         int[][] autos = new int[4][10000000];
         for (Household hh: Household.getHouseholdArray()) {
@@ -1153,7 +1154,7 @@ public class summarizeData {
         }
         pwa.close();
 
-        PrintWriter pw = SiloUtil.openFileForSequentialWriting("microData/interimFiles/carOwnershipB.csv", false);
+        PrintWriter pw = SiloUtil.openFileForSequentialWriting("microData/interimFiles/carOwnershipByMunicipality.csv", false);
         pw.println("Municipality,0autos,1auto,2autos,3+autos");
         for (int municipality = 0; municipality < 10000000; municipality++) {
             int sm = 0;
