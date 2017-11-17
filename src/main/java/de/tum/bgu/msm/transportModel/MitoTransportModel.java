@@ -27,9 +27,10 @@ public class MitoTransportModel implements TransportModelI {
 	private final SiloModelContainer modelContainer;
     private TrafficAssignmentModel trafficAssignmentModel;
 	private final GeoData geoData;
+	private TravelTimes travelTimes;
 
 
-    public MitoTransportModel(ResourceBundle siloRb, ResourceBundle mitoRb, String baseDirectory, GeoData geoData, SiloModelContainer modelContainer) {
+	public MitoTransportModel(ResourceBundle siloRb, ResourceBundle mitoRb, String baseDirectory, GeoData geoData, SiloModelContainer modelContainer) {
 		this.mito = new MitoModel(mitoRb);
 		this.geoData = geoData;
 		this.modelContainer = modelContainer;
@@ -53,7 +54,7 @@ public class MitoTransportModel implements TransportModelI {
 		logger.info("  Running traffic assignment for the year " + year);
 
         trafficAssignmentModel.load(year);
-        TravelTimes travelTimes = trafficAssignmentModel.runTrafficAssignment();
+        travelTimes = trafficAssignmentModel.runTrafficAssignment();
         modelContainer.getAcc().addTravelTimeForMode(TransportMode.car, travelTimes);
         logger.info("travel times by car updated to year " + year);
 
