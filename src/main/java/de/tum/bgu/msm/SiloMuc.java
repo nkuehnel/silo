@@ -4,6 +4,8 @@ import de.tum.bgu.msm.data.summarizeData;
 import de.tum.bgu.msm.properties.Properties;
 import de.tum.bgu.msm.syntheticPopulationGenerator.SyntheticPopulationGenerator;
 import org.apache.log4j.Logger;
+import org.matsim.core.config.Config;
+import org.matsim.core.config.ConfigUtils;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;

@@ -38,6 +38,7 @@ import org.matsim.core.router.util.TravelTime;
 import org.matsim.core.scenario.MutableScenario;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.utils.collections.Tuple;
+import org.matsim.core.utils.geometry.transformations.TransformationFactory;
 import org.matsim.core.utils.gis.ShapeFileReader;
 import org.matsim.utils.leastcostpathtree.LeastCostPathTree;
 import org.opengis.feature.simple.SimpleFeature;
@@ -57,6 +58,7 @@ public class MatsimTransportModel implements TransportModelI {
 
 	private static final String PROPERTIES_ZONES_SHAPEFILE	= "matsim.zones.shapefile";
 	private static final String PROPERTIES_ZONES_CRS 		= "matsim.zones.crs";
+	private static final String PROPERTIES_ID_SHAPEFILE_ATTR   		= "matsim.zones.id.attribute";
 
 	private HouseholdDataManager householdData;
 	private Accessibility acc;
@@ -94,11 +96,11 @@ public class MatsimTransportModel implements TransportModelI {
 		
 		// people working at non-peak times (only peak traffic is simulated), and people going by a mode other
 		// than car in case a car is still available to them
-		double workerScalingFactor = 0.66;
+		double workerScalingFactor = 0.01;
 		
 		Map<Integer,SimpleFeature> zoneFeatureMap = new HashMap<>();
 		for (SimpleFeature feature: ShapeFileReader.getAllFeatures(zoneShapeFile)) {
-			int zoneId = Integer.parseInt(feature.getAttribute("SMZRMZ").toString());
+			int zoneId = Integer.parseInt(feature.getAttribute(rb.getString(PROPERTIES_ID_SHAPEFILE_ATTR)).toString());
 			zoneFeatureMap.put(zoneId,feature);
 		}
 		

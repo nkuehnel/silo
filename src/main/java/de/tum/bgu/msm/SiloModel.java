@@ -35,6 +35,7 @@ import de.tum.bgu.msm.events.IssueCounter;
 import de.tum.bgu.msm.transportModel.MitoTransportModel;
 import de.tum.bgu.msm.transportModel.TransportModelI;
 import de.tum.bgu.msm.transportModel.matsim.MatsimTransportModel;
+import org.matsim.core.config.ConfigUtils;
 
 /**
  * @author Greg Erhardt
@@ -50,7 +51,7 @@ public class SiloModel {
 
 	private SiloModelContainer modelContainer;
 	private SiloDataContainer dataContainer;
-	private final Config matsimConfig;
+	private final Config matsimConfig = ConfigUtils.createConfig();
 
 	/**
 	 * Constructor to set up a SILO model
@@ -65,7 +66,7 @@ public class SiloModel {
 		this.properties = properties;
 		IssueCounter.setUpCounter();   // set up counter for any issues during initial setup
 		SiloUtil.modelStopper("initialize");
-		this.matsimConfig = matsimConfig ;
+		//this.matsimConfig = matsimConfig ;
 	}
 
 

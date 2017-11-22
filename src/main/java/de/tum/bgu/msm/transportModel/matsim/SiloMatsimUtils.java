@@ -47,7 +47,9 @@ public class SiloMatsimUtils {
 	
 	public static Config createMatsimConfig(Config initialConfig, String runId, double populationScalingFactor, double workerScalingFactor) {
 		LOG.info("Stating creating a MATSim config.");
-		Config config = ConfigUtils.loadConfig(initialConfig.getContext());
+		//Config config = ConfigUtils.loadConfig(initialConfig.getContext());
+		Config config = ConfigUtils.createConfig();
+
 		double flowCapacityFactor = populationScalingFactor;
 		config.qsim().setFlowCapFactor(flowCapacityFactor);
 		
@@ -55,12 +57,16 @@ public class SiloMatsimUtils {
 		// Storage_Capacitiy_Factor = Sampling_Rate / ((Sampling_Rate) ^ (1/4))
 		double storageCapacityFactor = Math.round((flowCapacityFactor / (Math.pow(flowCapacityFactor, 0.25)) * 100)) / 100.;
 		config.qsim().setStorageCapFactor(storageCapacityFactor);
-		
-		String outputDirectoryRoot = initialConfig.controler().getOutputDirectory();
-		String outputDirectory = outputDirectoryRoot + "/" + runId + "/";
+
+		config.network().setInputFile("matsim/input/studyNetworkLight.xml");
+
+		String outputDirectory = "matsim/output/matsimtest/";
+		//String outputDirectoryRoot = initialConfig.controler().getOutputDirectory();
+		//String outputDirectory = outputDirectoryRoot + "/" + runId + "/";
 		config.controler().setRunId(runId);
 		config.controler().setOutputDirectory(outputDirectory);
 		config.controler().setFirstIteration(0);
+		config.controler().setLastIteration(1);
 		config.controler().setMobsim("qsim");
 		config.controler().setWritePlansInterval(config.controler().getLastIteration());
 		config.controler().setWriteEventsInterval(config.controler().getLastIteration());
