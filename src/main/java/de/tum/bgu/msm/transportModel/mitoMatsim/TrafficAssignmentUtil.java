@@ -1,6 +1,7 @@
 package de.tum.bgu.msm.transportModel.mitoMatsim;
 
 import de.tum.bgu.msm.SiloUtil;
+import de.tum.bgu.msm.properties.Properties;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Coord;
 
@@ -14,13 +15,12 @@ import java.util.ResourceBundle;
 public class TrafficAssignmentUtil {
 
     static Logger logger = Logger.getLogger(TrafficAssignmentUtil.class);
-    private ResourceBundle rb;
+
     private Map<Integer, Coord> coordinateMap = new HashMap<>();
     private Map<Integer, Double> sizeMap = new HashMap<>();
     private String trafficAssignmentDirectory;
 
-    public TrafficAssignmentUtil(ResourceBundle rb) {
-        this.rb = rb;
+    public TrafficAssignmentUtil() {
 
     }
 
@@ -47,7 +47,7 @@ public class TrafficAssignmentUtil {
 
         logger.info("Reading zone coordinates");
 
-        String fileName = trafficAssignmentDirectory + rb.getString("matsim.zone.coordinates");
+        String fileName = trafficAssignmentDirectory + Properties.get().transportModel.matsimZoneCoordinates;
 
 
         String recString = "";

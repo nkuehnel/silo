@@ -212,8 +212,8 @@ public class SiloModel {
 			if (trackTime) timeCounter[EventTypes.values().length + 9][year] += System.currentTimeMillis() - startTime;
 
 			if (trackTime) startTime = System.currentTimeMillis();
-			if (year == SiloUtil.getBaseYear() || year != SiloUtil.getStartYear())
-				SiloUtil.summarizeMicroData(year, modelContainer, dataContainer, rbLandUse, properties);
+			if (year == SiloUtil.getBaseYear() || year != Properties.get().main.startYear)
+				SiloUtil.summarizeMicroData(year, modelContainer, dataContainer);
 			if (trackTime) timeCounter[EventTypes.values().length + 7][year] += System.currentTimeMillis() - startTime;
 
 			logger.info("  Simulating events");

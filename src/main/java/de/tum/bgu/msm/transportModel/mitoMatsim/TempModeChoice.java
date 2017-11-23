@@ -2,6 +2,7 @@ package de.tum.bgu.msm.transportModel.mitoMatsim;
 
 import com.pb.common.matrix.Matrix;
 import de.tum.bgu.msm.SiloUtil;
+import de.tum.bgu.msm.properties.Properties;
 import omx.OmxFile;
 import omx.OmxMatrix;
 
@@ -10,8 +11,8 @@ import java.util.ResourceBundle;
 //temporary mode choice model, it won't be used when mito trips have selected mode
 
 public class TempModeChoice {
-    private ResourceBundle rb;
-    private String trafficAssignmentDirectory;
+
+
     private Matrix autoTravelDistance;
 
     //hard coded as a temporary solution
@@ -28,13 +29,14 @@ public class TempModeChoice {
     private float beta_bicycle = -0.07f;
     private float beta_transit = -0.05f;
 
-    public TempModeChoice(ResourceBundle rb) {
-        this.rb=rb;
+    public TempModeChoice() {
+
     }
 
     public void setup(String trafficAssignmentDirectory){
-        this.trafficAssignmentDirectory = trafficAssignmentDirectory;
-        OmxFile file = new OmxFile(trafficAssignmentDirectory + rb.getString("matsim.distance.skim.file"));
+
+        OmxFile file = new OmxFile(trafficAssignmentDirectory + Properties.get().transportModel.matsimDistanceSkimFile);
+
         file.openReadOnly();
         OmxMatrix matrix = file.getMatrix("mat1");
         autoTravelDistance = SiloUtil.convertOmxToMatrix(matrix);

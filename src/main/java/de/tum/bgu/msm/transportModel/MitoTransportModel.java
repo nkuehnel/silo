@@ -31,24 +31,24 @@ public class MitoTransportModel implements TransportModelI {
 
 
 
-	public MitoTransportModel(ResourceBundle siloRb, ResourceBundle mitoRb, String baseDirectory, GeoData geoData, SiloModelContainer modelContainer) {
-		this.mito = new MitoModel(mitoRb);
+	public MitoTransportModel(ResourceBundle rb, String baseDirectory, GeoData geoData, SiloModelContainer modelContainer) {
+		this.mito = new MitoModel(rb);
 		this.geoData = geoData;
 		this.modelContainer = modelContainer;
 		mito.setRandomNumberGenerator(SiloUtil.getRandomObject());
 		setBaseDirectory(baseDirectory);
 
-        trafficAssignmentModel = new TrafficAssignmentModel(siloRb, modelContainer);
-        trafficAssignmentModel.setup(ResourceUtil.getDoubleProperty(siloRb, "matsim.scaling.factor"),
-                ResourceUtil.getIntegerProperty(siloRb, "matsim.iterations"),
-                ResourceUtil.getIntegerProperty(siloRb, "matsim.threads"));
+        trafficAssignmentModel = new TrafficAssignmentModel(modelContainer);
+        trafficAssignmentModel.setup(Properties.get().transportModel.matsimScaleFactor,
+				Properties.get().transportModel.matsimIterations,
+				Properties.get().transportModel.matsimThreads);
 
     }
 
     @Override
     public void runTransportModel(int year) {
     	MitoModel.setScenarioName (Properties.get().main.scenarioName);
-    	updateData();
+    	updateData(year);
 		logger.info("  Update MITO data for the year " + year);
     	//MitoModel.setScenarioName (SiloUtil.scenarioName);
     	updateData(year);

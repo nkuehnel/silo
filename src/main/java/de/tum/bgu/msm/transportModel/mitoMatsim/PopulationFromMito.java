@@ -36,10 +36,10 @@ public class PopulationFromMito {
     private TempTimeOfDay tempTimeOfDay;
 
 
-    public PopulationFromMito(ResourceBundle rb) {
-        this.rb=rb;
-        tempModeChoice = new TempModeChoice(rb);
-        tempTimeOfDay = new TempTimeOfDay(rb);
+    public PopulationFromMito() {
+
+        tempModeChoice = new TempModeChoice();
+        tempTimeOfDay = new TempTimeOfDay();
 
     }
 

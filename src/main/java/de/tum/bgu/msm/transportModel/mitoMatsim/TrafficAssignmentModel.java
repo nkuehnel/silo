@@ -7,6 +7,7 @@ import de.tum.bgu.msm.data.Accessibility;
 import de.tum.bgu.msm.data.MitoHousehold;
 import de.tum.bgu.msm.data.Zone;
 import de.tum.bgu.msm.data.travelTimes.TravelTimes;
+import de.tum.bgu.msm.properties.Properties;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.population.Population;
@@ -23,10 +24,11 @@ import org.matsim.core.utils.geometry.transformations.TransformationFactory;
 import org.matsim.utils.leastcostpathtree.LeastCostPathTree;
 
 import java.util.Map;
+
 import java.util.ResourceBundle;
 
 public class TrafficAssignmentModel {
-    private ResourceBundle rb;
+
     private String trafficAssignmentDirectory;
     private TrafficAssignmentUtil trafficAssignmentUtil;
     private Config matsimConfig;
@@ -38,16 +40,16 @@ public class TrafficAssignmentModel {
 
     private PopulationFromMito populationFromMito;
 
-    public TrafficAssignmentModel(ResourceBundle rb, SiloModelContainer modelContainer) {
-        this.rb = rb;
+    public TrafficAssignmentModel(SiloModelContainer modelContainer) {
+
         this.modelContainer = modelContainer;
 
-        trafficAssignmentUtil = new TrafficAssignmentUtil(rb);
-        populationFromMito = new PopulationFromMito(rb);
+        trafficAssignmentUtil = new TrafficAssignmentUtil();
+        populationFromMito = new PopulationFromMito();
     }
 
     public void setup(double scalingFactor, int numberOfIterations, int numberOfThreads){
-        trafficAssignmentDirectory = rb.getString("matsim.directory");
+        trafficAssignmentDirectory = Properties.get().transportModel.matsimDirectory;
         //create common configuration parameters for every year
         trafficAssignmentUtil.setup(trafficAssignmentDirectory);
         trafficAssignmentUtil.readCoordinateData();
@@ -57,7 +59,7 @@ public class TrafficAssignmentModel {
     }
 
     public void feedDataToMatsim(Map<Integer, Zone> zones, Map<Integer, MitoHousehold> mitoHouseholds, Accessibility acc, int year){
-        String networkFile = trafficAssignmentDirectory + rb.getString("matsim.network");
+        String networkFile = trafficAssignmentDirectory + Properties.get().transportModel.matsimNetworkFile;
         matsimConfig.network().setInputFile(networkFile);
         matsimScenario = (MutableScenario) ScenarioUtils.loadScenario(matsimConfig);
         matsimConfig.controler().setOutputDirectory(trafficAssignmentDirectory + "output/" + year);

@@ -74,6 +74,7 @@ public class MatsimTransportModel implements TransportModelI {
 
 		initialMatsimConfig.global().setCoordinateSystem(Properties.get().transportModel.matsimZoneCRS);
 		String zoneShapeFile = Properties.get().main.baseDirectory + "/" + Properties.get().transportModel.matsimZoneShapeFile;
+		String idOfZonesInShapefile = Properties.get().transportModel.idOfZonesInShapefile;
 		
 		// In the current implementation, MATSim is used to reflect the functionality that was previously
 		// covered by MSTM. As such, based on the MATSim transport simulation, a travel time matrix (skim)
@@ -92,7 +93,7 @@ public class MatsimTransportModel implements TransportModelI {
 		
 		Map<Integer,SimpleFeature> zoneFeatureMap = new HashMap<>();
 		for (SimpleFeature feature: ShapeFileReader.getAllFeatures(zoneShapeFile)) {
-			int zoneId = Integer.parseInt(feature.getAttribute(rb.getString(PROPERTIES_ID_SHAPEFILE_ATTR)).toString());
+			int zoneId = Integer.parseInt(feature.getAttribute(idOfZonesInShapefile).toString());
 			zoneFeatureMap.put(zoneId,feature);
 		}
 		
