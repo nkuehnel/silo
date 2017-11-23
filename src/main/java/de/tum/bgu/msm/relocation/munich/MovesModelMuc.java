@@ -103,7 +103,7 @@ public class MovesModelMuc extends AbstractDefaultMovesModel {
 
     @Override
     protected void setupSelectRegionModel() {
-        Reader reader = new InputStreamReader(this.getClass().getSuperclass().getResourceAsStream("SelectRegionCalc"));
+        Reader reader = new InputStreamReader(this.getClass().getResourceAsStream("SelectRegionCalc"));
         regionCalculator = new SelectRegionJSCalculator(reader, false);
     }
 
@@ -153,7 +153,7 @@ public class MovesModelMuc extends AbstractDefaultMovesModel {
 
     @Override
     protected void setupSelectDwellingModel() {
-        Reader reader = new InputStreamReader(this.getClass().getSuperclass().getResourceAsStream("SelectDwellingCalc"));
+        Reader reader = new InputStreamReader(this.getClass().getResourceAsStream("SelectDwellingCalc"));
         dwellingCalculator = new SelectDwellingJSCalculator(reader, false);
     }
 
