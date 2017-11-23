@@ -2,6 +2,7 @@ package de.tum.bgu.msm.transportModel.mitoMatsim;
 
 import com.pb.common.matrix.Matrix;
 import de.tum.bgu.msm.SiloUtil;
+import de.tum.bgu.msm.data.Accessibility;
 import de.tum.bgu.msm.data.MitoHousehold;
 import de.tum.bgu.msm.data.MitoPerson;
 import de.tum.bgu.msm.data.Zone;
@@ -30,7 +31,7 @@ public class PopulationFromMito {
     private TrafficAssignmentUtil trafficAssignmentUtil;
     private Plan matsimPlan;
     private double scalingFactor;
-    private TravelTimes autoTravelTimes;
+
     private TempModeChoice tempModeChoice;
     private TempTimeOfDay tempTimeOfDay;
 
@@ -51,11 +52,9 @@ public class PopulationFromMito {
         tempTimeOfDay.setup(trafficAssignmentDirectory);
     }
 
-    public Population createPopulationFromMito(Map<Integer, MitoHousehold> households, TravelTimes autoTravelTimes, Map<Integer, Zone> zones, int year){
+    public Population createPopulationFromMito(Map<Integer, MitoHousehold> households, Accessibility acc, Map<Integer, Zone> zones, int year){
 
         logger.info("starting conversion of MITO households to MATSim hbw trips");
-
-        this.autoTravelTimes = autoTravelTimes;
 
         Config matsimConfig = ConfigUtils.createConfig();
         Scenario matsimScenario = ScenarioUtils.createScenario(matsimConfig);
@@ -69,7 +68,6 @@ public class PopulationFromMito {
             //with master at 22.9
             for (MitoPerson mitoPerson : mitoHousehold.getPersons().values()){
 
-
                 if (mitoPerson.getWorkplace() > 0 ) {
                     //start with HBW trips
                     int homeZone = mitoHousehold.getHomeZone().getZoneId();
@@ -82,7 +80,7 @@ public class PopulationFromMito {
 
                         org.matsim.api.core.v01.population.Person matsimPerson = matsimPopulationFactory.createPerson(Id.create(mitoPerson.getId(), org.matsim.api.core.v01.population.Person.class));
                         matsimPlan = matsimPopulationFactory.createPlan();
-                        addTripsToWork(homeZone, workZone);
+                        addTripsToWork(homeZone, workZone, acc);
                         //logger.info("person: " + mitoPerson.getId() + " home at " + homeZone + " work at " + workZone);
                         matsimPerson.addPlan(matsimPlan);
                         matsimPopulation.addPerson(matsimPerson);
@@ -105,7 +103,7 @@ public class PopulationFromMito {
     }
 
 
-    public void addTripsToWork(int homeZone, int workZone){
+    public void addTripsToWork(int homeZone, int workZone, Accessibility acc){
 
         double time;
 
@@ -117,7 +115,7 @@ public class PopulationFromMito {
         matsimPlan.addActivity(activity1);
         matsimPlan.addLeg(matsimPopulationFactory.createLeg(TransportMode.car));
 
-        time += tempTimeOfDay.selectWorkDuration() + autoTravelTimes.getTravelTimeFromTo(homeZone, workZone);
+        time += tempTimeOfDay.selectWorkDuration() + acc.getAutoTravelTime(homeZone, workZone);
 
         Coord workCoord = trafficAssignmentUtil.getRandomZoneCoordinates(workZone);
         Activity activity2 = matsimPopulationFactory.createActivityFromCoord("work", workCoord);

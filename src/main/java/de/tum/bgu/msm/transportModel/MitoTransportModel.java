@@ -7,6 +7,7 @@ import java.util.ResourceBundle;
 import com.pb.common.util.ResourceUtil;
 import de.tum.bgu.msm.container.SiloModelContainer;
 import de.tum.bgu.msm.data.*;
+import de.tum.bgu.msm.transportModel.mitoMatsim.MitoMatsimTravelTimes;
 import de.tum.bgu.msm.transportModel.mitoMatsim.TrafficAssignmentModel;
 import org.apache.log4j.Logger;
 
@@ -27,7 +28,7 @@ public class MitoTransportModel implements TransportModelI {
 	private final SiloModelContainer modelContainer;
     private TrafficAssignmentModel trafficAssignmentModel;
 	private final GeoData geoData;
-	private TravelTimes travelTimes;
+
 
 
 	public MitoTransportModel(ResourceBundle siloRb, ResourceBundle mitoRb, String baseDirectory, GeoData geoData, SiloModelContainer modelContainer) {
@@ -37,7 +38,7 @@ public class MitoTransportModel implements TransportModelI {
 		mito.setRandomNumberGenerator(SiloUtil.getRandomObject());
 		setBaseDirectory(baseDirectory);
 
-        trafficAssignmentModel = new TrafficAssignmentModel(siloRb);
+        trafficAssignmentModel = new TrafficAssignmentModel(siloRb, modelContainer);
         trafficAssignmentModel.setup(ResourceUtil.getDoubleProperty(siloRb, "matsim.scaling.factor"),
                 ResourceUtil.getIntegerProperty(siloRb, "matsim.iterations"),
                 ResourceUtil.getIntegerProperty(siloRb, "matsim.threads"));
@@ -48,19 +49,19 @@ public class MitoTransportModel implements TransportModelI {
     public void runTransportModel(int year) {
 		logger.info("  Update MITO data for the year " + year);
     	//MitoModel.setScenarioName (SiloUtil.scenarioName);
-    	updateData();
+    	updateData(year);
     	logger.info("  Running travel demand model MITO for the year " + year);
     	//mito.runModel();
 		logger.info("  Running traffic assignment for the year " + year);
 
-        trafficAssignmentModel.load(year);
-        travelTimes = trafficAssignmentModel.runTrafficAssignment();
-        modelContainer.getAcc().addTravelTimeForMode(TransportMode.car, travelTimes);
+
+        trafficAssignmentModel.runTrafficAssignment();
+
         logger.info("travel times by car updated to year " + year);
 
     }
-    
-    private void updateData() {
+
+    private void updateData(int year) {
     	Map<Integer, Zone> zones = new HashMap<>();
 		for (int i = 0; i < geoData.getZones().length; i++) {
 			AreaType areaType = AreaType.RURAL; //TODO: put real area type in here
@@ -89,7 +90,7 @@ public class MitoTransportModel implements TransportModelI {
         //InputFeed feed = new InputFeed(zones, travelTimes, households);
         //mito.feedData(feed);
 		logger.info("  MITO and SILO data being sent to MATSim");
-        trafficAssignmentModel.feedDataToMatsim(zones, households, modelContainer.getAcc().getTravelTimes().get(TransportMode.car));
+        trafficAssignmentModel.feedDataToMatsim(zones, households, modelContainer.getAcc(), year);
 
     }
 

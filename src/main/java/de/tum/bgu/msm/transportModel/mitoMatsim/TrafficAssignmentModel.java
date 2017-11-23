@@ -1,9 +1,13 @@
 package de.tum.bgu.msm.transportModel.mitoMatsim;
 
 import com.pb.common.matrix.Matrix;
+import de.tum.bgu.msm.SiloModel;
+import de.tum.bgu.msm.container.SiloModelContainer;
+import de.tum.bgu.msm.data.Accessibility;
 import de.tum.bgu.msm.data.MitoHousehold;
 import de.tum.bgu.msm.data.Zone;
 import de.tum.bgu.msm.data.travelTimes.TravelTimes;
+import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.population.Population;
 import org.matsim.core.config.Config;
@@ -27,17 +31,16 @@ public class TrafficAssignmentModel {
     private TrafficAssignmentUtil trafficAssignmentUtil;
     private Config matsimConfig;
     private MutableScenario matsimScenario;
-    private Population matsimPopulation;
     private Map<Integer, Zone> zones;
-    private TravelTimes autoTravelTimes;
-    private Map<Integer, MitoHousehold> mitoHouseholds;
     private double scalingFactor;
+    private SiloModelContainer modelContainer;
 
 
     private PopulationFromMito populationFromMito;
 
-    public TrafficAssignmentModel(ResourceBundle rb) {
+    public TrafficAssignmentModel(ResourceBundle rb, SiloModelContainer modelContainer) {
         this.rb = rb;
+        this.modelContainer = modelContainer;
 
         trafficAssignmentUtil = new TrafficAssignmentUtil(rb);
         populationFromMito = new PopulationFromMito(rb);
@@ -53,31 +56,19 @@ public class TrafficAssignmentModel {
         configMatsim(numberOfIterations, numberOfThreads);
     }
 
-    public void feedDataToMatsim(Map<Integer, Zone> zones, Map<Integer, MitoHousehold> mitoHouseholds, TravelTimes travelTimes){
-        //feeds data from silo matsim, it is year-specific - I suggest to combine with the next method load
-        this.zones = zones;
-        this.mitoHouseholds = mitoHouseholds;
-        this.autoTravelTimes = travelTimes;
-
-
-    }
-
-    public void load(int year){
-        //configure year-specific parameters
-
+    public void feedDataToMatsim(Map<Integer, Zone> zones, Map<Integer, MitoHousehold> mitoHouseholds, Accessibility acc, int year){
         String networkFile = trafficAssignmentDirectory + rb.getString("matsim.network");
         matsimConfig.network().setInputFile(networkFile);
-
-        //creates a matsim scenario and the population from mito households/persons/trips
         matsimScenario = (MutableScenario) ScenarioUtils.loadScenario(matsimConfig);
         matsimConfig.controler().setOutputDirectory(trafficAssignmentDirectory + "output/" + year);
         matsimConfig.controler().setRunId("mitoMatsim" + year);
-        matsimPopulation = populationFromMito.createPopulationFromMito(mitoHouseholds,  autoTravelTimes, zones, year);
+        Population matsimPopulation = populationFromMito.createPopulationFromMito(mitoHouseholds, acc, zones, year);
         matsimScenario.setPopulation(matsimPopulation);
+        this.zones = zones;
 
     }
 
-    public TravelTimes runTrafficAssignment(){
+    public void runTrafficAssignment(){
         //run matsim for the selected year
         final Controler controler = new Controler(matsimScenario);
         controler.run();
@@ -85,7 +76,8 @@ public class TrafficAssignmentModel {
         TravelTime travelTime = controler.getLinkTravelTimes();
         TravelDisutility travelDisutility = controler.getTravelDisutilityFactory().createTravelDisutility(travelTime);
         LeastCostPathTree leastCoastPathTree = new LeastCostPathTree(travelTime, travelDisutility);
-        return new MitoMatsimTravelTimes(leastCoastPathTree, matsimScenario.getNetwork(), trafficAssignmentUtil, zones);
+        MitoMatsimTravelTimes travelTimes = new  MitoMatsimTravelTimes(leastCoastPathTree, matsimScenario.getNetwork(), trafficAssignmentUtil, zones);
+        modelContainer.getAcc().addTravelTimeForMode(TransportMode.car, travelTimes);
     }
 
 
