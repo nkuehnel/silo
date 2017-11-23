@@ -190,7 +190,7 @@ public class SummarizeData {
         // summarize retail employment by zone
 
         int[] retailEmplByZone = new int[geoData.getZones().length];
-        for (Job jj: Job.getJobArray()) {
+        for (Job jj: Job.getJobs()) {
             if (jj.getType().equals("RET")) retailEmplByZone[geoData.getZoneIndex(jj.getZone())]++;
         }
         return retailEmplByZone;
@@ -201,7 +201,7 @@ public class SummarizeData {
         // summarize office employment by zone
 
         int[] officeEmplByZone = new int[geoData.getZones().length];
-        for (Job jj: Job.getJobArray()) {
+        for (Job jj: Job.getJobs()) {
             if (jj.getType().equals("OFF")) officeEmplByZone[geoData.getZoneIndex(jj.getZone())]++;
         }
         return officeEmplByZone;
@@ -212,7 +212,7 @@ public class SummarizeData {
         // summarize other employment by zone
 
         int[] otherEmplByZone = new int[geoData.getZones().length];
-        for (Job jj: Job.getJobArray()) {
+        for (Job jj: Job.getJobs()) {
             if (jj.getType().equals("OTH")) otherEmplByZone[geoData.getZoneIndex(jj.getZone())]++;
         }
         return otherEmplByZone;
@@ -223,7 +223,7 @@ public class SummarizeData {
         // summarize retail employment by zone
 
         int[] totalEmplByZone = new int[geoData.getZones().length];
-        for (Job jj: Job.getJobArray()) {
+        for (Job jj: Job.getJobs()) {
             totalEmplByZone[geoData.getZoneIndex(jj.getZone())]++;
         }
         return totalEmplByZone;
