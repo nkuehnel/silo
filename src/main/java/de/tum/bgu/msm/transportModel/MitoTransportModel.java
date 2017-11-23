@@ -28,6 +28,7 @@ public class MitoTransportModel implements TransportModelI {
 	private final SiloModelContainer modelContainer;
     private TrafficAssignmentModel trafficAssignmentModel;
 	private final GeoData geoData;
+	private boolean runMatsimAfterMito;
 
 
 
@@ -37,12 +38,14 @@ public class MitoTransportModel implements TransportModelI {
 		this.modelContainer = modelContainer;
 		mito.setRandomNumberGenerator(SiloUtil.getRandomObject());
 		setBaseDirectory(baseDirectory);
+		runMatsimAfterMito = Properties.get().transportModel.runMatsimAfterMito;
 
-        trafficAssignmentModel = new TrafficAssignmentModel(modelContainer);
-        trafficAssignmentModel.setup(Properties.get().transportModel.matsimScaleFactor,
-				Properties.get().transportModel.matsimIterations,
-				Properties.get().transportModel.matsimThreads);
-
+		if (runMatsimAfterMito) {
+			trafficAssignmentModel = new TrafficAssignmentModel(modelContainer);
+			trafficAssignmentModel.setup(Properties.get().transportModel.matsimScaleFactor,
+					Properties.get().transportModel.matsimIterations,
+					Properties.get().transportModel.matsimThreads);
+		}
     }
 
     @Override
@@ -56,8 +59,9 @@ public class MitoTransportModel implements TransportModelI {
     	//mito.runModel();
 		logger.info("  Running traffic assignment for the year " + year);
 
-
-        trafficAssignmentModel.runTrafficAssignment();
+		if (runMatsimAfterMito) {
+			trafficAssignmentModel.runTrafficAssignment();
+		}
 
         logger.info("travel times by car updated to year " + year);
 
@@ -90,9 +94,12 @@ public class MitoTransportModel implements TransportModelI {
         logger.info("  SILO data being sent to MITO");
         //InputFeed feed = new InputFeed(zones, travelTimes, households);
         //mito.feedData(feed);
-		logger.info("  MITO and SILO data being sent to MATSim");
-        trafficAssignmentModel.feedDataToMatsim(zones, households, modelContainer.getAcc(), year);
 
+
+		if (runMatsimAfterMito) {
+			logger.info("  MITO and SILO data being sent to MATSim");
+			trafficAssignmentModel.feedDataToMatsim(zones, households, modelContainer.getAcc(), year);
+		}
     }
 
     private void setBaseDirectory (String baseDirectory) {
