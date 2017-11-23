@@ -27,7 +27,7 @@ public class SiloCSDMS {
 //        SyntheticPopUs sp = new SyntheticPopUs(rb);
 //        sp.runSP();
         initialize(args);
-        for (int year = SiloUtil.getStartYear(); year < SiloUtil.getEndYear(); year += SiloUtil.getSimulationLength()) {
+        for (int year = Properties.get().main.startYear; year < Properties.get().main.endYear; year += Properties.get().main.simulationLength) {
             update(1d);
         }
         finalizeIt();
@@ -62,11 +62,11 @@ public class SiloCSDMS {
 
         logger.info("Starting SILO Initialization for MSTM with CSDMS Integration");
         rb = SiloUtil.siloInitialization(configFile);
-        properties = new Properties(rb);
+        Properties.initializeProperties(rb);
         SiloUtil.setBaseYear(2000);
-        logger.info("Scenario: " + SiloUtil.scenarioName + ", Simulation start year: " + SiloUtil.getStartYear());
+        logger.info("Scenario: " + Properties.get().main.scenarioName + ", Simulation start year: " + Properties.get().main.startYear);
         startTime = System.currentTimeMillis();
-        model = new SiloModelCBLCM(rb);
+        model = new SiloModelCBLCM();
         model.initialize();
         logger.info("Finished Initialization.");
     }

@@ -4,9 +4,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
 
-import com.pb.common.util.ResourceUtil;
 import de.tum.bgu.msm.container.SiloModelContainer;
 import de.tum.bgu.msm.data.*;
+import de.tum.bgu.msm.properties.Properties;
 import de.tum.bgu.msm.transportModel.mitoMatsim.MitoMatsimTravelTimes;
 import de.tum.bgu.msm.transportModel.mitoMatsim.TrafficAssignmentModel;
 import org.apache.log4j.Logger;
@@ -47,6 +47,8 @@ public class MitoTransportModel implements TransportModelI {
 
     @Override
     public void runTransportModel(int year) {
+    	MitoModel.setScenarioName (Properties.get().main.scenarioName);
+    	updateData();
 		logger.info("  Update MITO data for the year " + year);
     	//MitoModel.setScenarioName (SiloUtil.scenarioName);
     	updateData(year);
@@ -66,11 +68,10 @@ public class MitoTransportModel implements TransportModelI {
 		for (int i = 0; i < geoData.getZones().length; i++) {
 			AreaType areaType = AreaType.RURAL; //TODO: put real area type in here
 			Zone zone = new Zone(geoData.getZones()[i], geoData.getSizeOfZonesInAcres()[i], areaType);
-			//comment because it takes too long
-			//zone.setRetailEmpl(summarizeData.getRetailEmploymentByZone(geoData)[i]);
-//			zone.setOfficeEmpl(summarizeData.getOfficeEmploymentByZone(geoData)[i]);
-//			zone.setOtherEmpl(summarizeData.getOtherEmploymentByZone(geoData)[i]);
-//			zone.setTotalEmpl(summarizeData.getTotalEmploymentByZone(geoData)[i]);
+			zone.setRetailEmpl(SummarizeData.getRetailEmploymentByZone(geoData)[i]);
+			zone.setOfficeEmpl(SummarizeData.getOfficeEmploymentByZone(geoData)[i]);
+			zone.setOtherEmpl(SummarizeData.getOtherEmploymentByZone(geoData)[i]);
+			zone.setTotalEmpl(SummarizeData.getTotalEmploymentByZone(geoData)[i]);
 			zones.put(zone.getZoneId(), zone);
 		}
 

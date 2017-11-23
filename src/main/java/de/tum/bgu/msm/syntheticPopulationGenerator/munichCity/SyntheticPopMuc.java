@@ -5,6 +5,7 @@ import com.pb.common.matrix.Matrix;
 import com.pb.common.util.ResourceUtil;
 import de.tum.bgu.msm.SiloUtil;
 import de.tum.bgu.msm.data.*;
+import de.tum.bgu.msm.properties.Properties;
 import de.tum.bgu.msm.syntheticPopulationGenerator.CreateCarOwnershipModel;
 import de.tum.bgu.msm.syntheticPopulationGenerator.munich.EmploymentChoice;
 import de.tum.bgu.msm.syntheticPopulationGenerator.SyntheticPopI;
@@ -242,7 +243,7 @@ public class SyntheticPopMuc implements SyntheticPopI {
                         attributeCodeToMicroHousehold.put(labelCode, labelMicroData);
                     }
                 }
-                if (ipu == true) {
+                if (ipu) {
                     if (valueCode > -1) {
                         updateInnerMap(attributeCodeValues, labelCode, valueCode, valueCode);
                     }
@@ -1686,8 +1687,7 @@ public class SyntheticPopMuc implements SyntheticPopI {
             coef = 1.1f;
         }
         float convertToMonth = 0.0057f;
-        float price = brw * size * coef * convertToMonth + 150;
-        return price;
+        return brw * size * coef * convertToMonth + 150;
     }
 
     private int guessBedrooms(int size) {
@@ -2755,7 +2755,7 @@ public class SyntheticPopMuc implements SyntheticPopI {
         double incomeRate = ResourceUtil.getDoubleProperty(rb,PROPERTIES_INCOME_GAMMA_RATE);
         double[] incomeProbability = ResourceUtil.getDoubleArray(rb,PROPERTIES_INCOME_GAMMA_PROBABILITY);
         GammaDistributionImpl gammaDist = new GammaDistributionImpl(incomeShape, 1/incomeRate);
-        String pumsFileName = SiloUtil.baseDirectory + ResourceUtil.getProperty(rb, PROPERTIES_MICRODATA_2010_PATH);
+        String pumsFileName = Properties.get().main.baseDirectory + ResourceUtil.getProperty(rb, PROPERTIES_MICRODATA_2010_PATH);
         String recString = "";
         int recCount = 0;
         int hhCountTotal = 0;
@@ -2911,8 +2911,7 @@ public class SyntheticPopMuc implements SyntheticPopI {
             probabilities[job] = probabilitiesJob.getStringIndexedValueAt(jobStringTypes[job],name);
         }
         //}
-        int selected = new EnumeratedIntegerDistribution(jobTypes, probabilities).sample();
-        return selected;
+        return new EnumeratedIntegerDistribution(jobTypes, probabilities).sample();
 
     }
 
@@ -2983,8 +2982,7 @@ public class SyntheticPopMuc implements SyntheticPopI {
             probabilities[j] = impedanceMatrix.getValueAt(home, zoneJobKeys[j] / 100) * vacantJobsByZoneByType.get(zoneJobKeys[j]);
             //probability = impedance * number of vacant jobs. Impedance is calculated in advance as exp(utility)
         }
-        int[] work = select(probabilities,zoneJobKeys);
-        return work;
+        return select(probabilities,zoneJobKeys);
     }
 
 

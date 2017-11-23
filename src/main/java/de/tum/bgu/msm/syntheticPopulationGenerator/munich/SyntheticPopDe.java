@@ -16,7 +16,6 @@ import org.apache.commons.math3.distribution.EnumeratedIntegerDistribution;
 import org.apache.log4j.Logger;
 
 import java.io.*;
-import java.util.ResourceBundle;
 import java.util.*;
 
 
@@ -162,8 +161,8 @@ public class SyntheticPopDe implements SyntheticPopI {
             }
             checkHouseholdRelationship();
             //Run fitting procedure
-            if (ResourceUtil.getBooleanProperty(rb, PROPERTIES_RUN_IPU) == true) {
-                if (ResourceUtil.getBooleanProperty(rb, PROPERTIES_CONSTRAINT_BY_CITY_AND_CNTY) == true) {
+            if (ResourceUtil.getBooleanProperty(rb, PROPERTIES_RUN_IPU)) {
+                if (ResourceUtil.getBooleanProperty(rb, PROPERTIES_CONSTRAINT_BY_CITY_AND_CNTY)) {
                     runIPUbyCityAndCounty(); //IPU fitting with constraints at two geographical resolutions
                 } else {
                     runIPUbyCity(); //IPU fitting with one geographical constraint. Each municipality is independent of others
@@ -176,14 +175,14 @@ public class SyntheticPopDe implements SyntheticPopI {
             assignJobs(); //Workplace allocation
             assignSchools(); //School allocation
             addCars(false);
-            summarizeData.writeOutSyntheticPopulationDE(rb, SiloUtil.getBaseYear());
+            SummarizeData.writeOutSyntheticPopulationDE(SiloUtil.getBaseYear());
         } else { //read the synthetic population  // todo: this part will be removed after testing is completed
             logger.info("Testing mode");
             //readMicroData2010();
             //checkHouseholdRelationship();
             readSyntheticPopulation();
             //addCars(false);
-            summarizeData.writeOutSyntheticPopulationDE(rb, SiloUtil.getBaseYear(),"_ddPrice_");
+            SummarizeData.writeOutSyntheticPopulationDE(rb, SiloUtil.getBaseYear(),"_ddPrice_");
             //readAndStoreMicroData();
         }
         long estimatedTime = System.nanoTime() - startTime;
@@ -280,7 +279,7 @@ public class SyntheticPopDe implements SyntheticPopI {
         logger.info("   Starting to read the micro data");
 
         //Scanning the file to obtain the number of households and persons in Bavaria
-        String pumsFileName = SiloUtil.baseDirectory + ResourceUtil.getProperty(rb, PROPERTIES_MICRODATA_2000_PATH);
+        String pumsFileName = de.tum.bgu.msm.properties.Properties.get().main.baseDirectory + ResourceUtil.getProperty(rb, PROPERTIES_MICRODATA_2000_PATH);
         String recString = "";
         int recCount = 0;
         int hhCountTotal = 0;
@@ -642,7 +641,7 @@ public class SyntheticPopDe implements SyntheticPopI {
         logger.info("   Starting to read the micro data");
 
         //Scanning the file to obtain the number of households and persons in Bavaria
-        String pumsFileName = SiloUtil.baseDirectory + ResourceUtil.getProperty(rb, PROPERTIES_MICRODATA_2010_PATH);
+        String pumsFileName = de.tum.bgu.msm.properties.Properties.get().main.baseDirectory + ResourceUtil.getProperty(rb, PROPERTIES_MICRODATA_2010_PATH);
         String recString = "";
         int recCount = 0;
         int hhCountTotal = 0;
@@ -2459,8 +2458,7 @@ public class SyntheticPopDe implements SyntheticPopI {
             coef = 1.1f;
         }
         float convertToMonth = 0.0057f;
-        float price = brw * size * coef * convertToMonth + 150;
-        return price;
+        return brw * size * coef * convertToMonth + 150;
     }
 
     private int guessBedrooms(int size) {
@@ -3547,7 +3545,7 @@ public class SyntheticPopDe implements SyntheticPopI {
         double incomeRate = ResourceUtil.getDoubleProperty(rb,PROPERTIES_INCOME_GAMMA_RATE);
         double[] incomeProbability = ResourceUtil.getDoubleArray(rb,PROPERTIES_INCOME_GAMMA_PROBABILITY);
         GammaDistributionImpl gammaDist = new GammaDistributionImpl(incomeShape, 1/incomeRate);
-        String pumsFileName = SiloUtil.baseDirectory + ResourceUtil.getProperty(rb, PROPERTIES_MICRODATA_2010_PATH);
+        String pumsFileName = de.tum.bgu.msm.properties.Properties.get().main.baseDirectory + ResourceUtil.getProperty(rb, PROPERTIES_MICRODATA_2010_PATH);
         String recString = "";
         int recCount = 0;
         int hhCountTotal = 0;
@@ -3703,8 +3701,7 @@ public class SyntheticPopDe implements SyntheticPopI {
                 probabilities[job] = probabilitiesJob.getStringIndexedValueAt(jobStringTypes[job],name);
             }
         //}
-        int selected = new EnumeratedIntegerDistribution(jobTypes, probabilities).sample();
-        return selected;
+        return new EnumeratedIntegerDistribution(jobTypes, probabilities).sample();
 
     }
 

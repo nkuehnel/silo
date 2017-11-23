@@ -19,10 +19,9 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import de.tum.bgu.msm.properties.modules.CblcmPropertiesModule;
+import de.tum.bgu.msm.properties.Properties;
+import de.tum.bgu.msm.properties.modules.CblcmProperties;
 import org.apache.log4j.Logger;
-
-import com.pb.common.util.ResourceUtil;
 
 /**
  * @author Darshan Pandit
@@ -43,7 +42,7 @@ public class CblcmDiffGenerator {
 		int baseYear = 2010;
 		int finalYear = 2030;
 
-		CblcmDiffGenerator.generateCblcmDiff(inputFiles, outputFile, baseYear, finalYear,null,null);
+		CblcmDiffGenerator.generateCblcmDiff(inputFiles, outputFile, baseYear, finalYear);
 
 	}
 
@@ -52,7 +51,7 @@ public class CblcmDiffGenerator {
 	 * 
 	 * @throws IOException
 	 */
-	public static boolean generateCblcmDiff(String[] inputFiles, String outputFile, int baseYear, int finalYear, ResourceBundle rb, CblcmPropertiesModule cblcmProperties)
+	public static boolean generateCblcmDiff(String[] inputFiles, String outputFile, int baseYear, int finalYear)
 			throws IOException {
 		logger.info("Calculating Spatial Diff for Cblcm Compatible output");
 		logger.info("baseYear : " + baseYear);
@@ -81,10 +80,9 @@ public class CblcmDiffGenerator {
 			double temp;
 			int columnNumber = 0;
 			for(String column:columns){
-				if(rb!=null)
-					temp = cblcmProperties.getMultiplierPrefix(column);
-				else
-					temp = 1;
+
+					temp = Properties.get().cblcm.multiplierPrefix(column);
+
 				if(temp!=0)
 					multipliers.put(columnNumber, temp);
 				columnNumber++;
@@ -95,17 +93,14 @@ public class CblcmDiffGenerator {
 			if (inputFiles.length == 3 && map.containsKey(templateBaseYear)) {
 				templateBaseYearValue = readYear(map.get(templateBaseYear)[0], map.get(templateBaseYear)[1], path);
 			}
-			;
 
-			if (map.containsKey(baseYear)) {
+            if (map.containsKey(baseYear)) {
 				baseYearValue = readYear(map.get(baseYear)[0], map.get(baseYear)[1], path);
 			}
-			;
-			if (map.containsKey(finalYear)) {
+            if (map.containsKey(finalYear)) {
 				finalYearValue = readYear(map.get(finalYear)[0], map.get(finalYear)[1], path);
 			}
-			;
-		}
+        }
 
 		if (baseYearValue == null || finalYearValue == null) {
 			logger.error("Unable to locate the configured Base or Final year for CBLCM diff generation process");
@@ -130,7 +125,7 @@ public class CblcmDiffGenerator {
 			StringBuilder builder = new StringBuilder();
 			builder.append(k);
 			for (double d : t.get(k)) {
-				builder.append("," + d);
+				builder.append(",").append(d);
 			}
 			builder.append("\n");
 			writer.write(builder.toString());
@@ -211,7 +206,7 @@ public class CblcmDiffGenerator {
 		if (multipliers==null)
 				multipliers = new HashMap<>();
 		
-		Map<String, double[]> result = new TreeMap();
+		Map<String, double[]> result = new TreeMap<>();
 
 		if (baseYear == null)
 			baseYear = new HashMap<>();

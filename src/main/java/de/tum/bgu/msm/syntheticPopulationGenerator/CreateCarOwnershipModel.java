@@ -6,6 +6,7 @@ import com.pb.common.matrix.Matrix;
 import com.pb.common.util.ResourceUtil;
 import de.tum.bgu.msm.SiloUtil;
 import de.tum.bgu.msm.data.*;
+import de.tum.bgu.msm.properties.Properties;
 import omx.OmxFile;
 import omx.OmxLookup;
 import org.apache.log4j.Logger;
@@ -34,7 +35,6 @@ public class CreateCarOwnershipModel {
 
     private TableDataSet zonalData;
 
-    private Reader reader;
     private CreateCarOwnershipJSCalculator calculator;
 
 
@@ -42,7 +42,7 @@ public class CreateCarOwnershipModel {
         // Constructor
         logger.info(" Setting up probabilities for car ownership model");
         this.rb = rb;
-        reader = new InputStreamReader(this.getClass().getResourceAsStream("CreateCarOwnershipCalc"));
+        Reader reader = new InputStreamReader(this.getClass().getResourceAsStream("CreateCarOwnershipCalc"));
         calculator = new CreateCarOwnershipJSCalculator(reader, false);
         readZonalData();
     }
@@ -70,7 +70,7 @@ public class CreateCarOwnershipModel {
         for (Household hh : Household.getHouseholdArray()) {
             simulateCarOwnership(hh);
         }
-        summarizeData.summarizeCarOwnershipByMunicipality(zonalData);
+        SummarizeData.summarizeCarOwnershipByMunicipality(zonalData);
         if (flagSkipCreationOfSPforDebugging) {
             logger.info("Finished car ownership model");
             System.exit(0);
@@ -101,7 +101,7 @@ public class CreateCarOwnershipModel {
         float[] minDistance = SiloUtil.createArrayWithValue(zonalData.getRowCount(), 0f);
         zonalData.appendColumn(minDistance, "distanceToTransit");
 
-        String omxFileName = SiloUtil.baseDirectory + ResourceUtil.getProperty(rb, PROPERTIES_TRANSIT_ACCEESS_TIME);
+        String omxFileName = Properties.get().main.baseDirectory + ResourceUtil.getProperty(rb, PROPERTIES_TRANSIT_ACCEESS_TIME);
         OmxFile travelTimeOmx = new OmxFile(omxFileName);
         travelTimeOmx.openReadOnly();
         Matrix accessDistanceMatrix = SiloUtil.convertOmxToMatrix(travelTimeOmx.getMatrix("mat1"));
