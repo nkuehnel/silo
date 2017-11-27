@@ -148,14 +148,14 @@ public class Accessibility {
             for (int dest: zones) {
                 double autoImpedance;
                 double autoTravelTime = getAutoTravelTime(orig, dest);
-                if (autoTravelTime == 0) {      // should never happen for auto
+                if (autoTravelTime <= 0) {      // should never happen for auto
                     autoImpedance = 0;
                 } else {
                     autoImpedance = Math.exp(betaAuto * autoTravelTime);
                 }
                 double transitImpedance;
                 double transitTravelTime = getTransitTravelTime(orig, dest);
-                if (transitTravelTime == 0) {   // zone is not connected by walk-to-transit
+                if (transitTravelTime <= 0) {   // zone is not connected by walk-to-transit (Nan is -1)
                     transitImpedance = 0;
                 } else {
                     transitImpedance = Math.exp(betaTransit * transitTravelTime);
