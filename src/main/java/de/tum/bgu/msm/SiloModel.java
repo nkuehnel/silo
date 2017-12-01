@@ -60,6 +60,11 @@ public class SiloModel {
 	private SiloDataContainer dataContainer;
 	private final Config matsimConfig = ConfigUtils.createConfig();
 
+	public SiloModel() {
+		this(null) ;
+	}
+
+
 	public SiloModel(Implementation implementation) {
 		this(null, implementation) ;
 	}

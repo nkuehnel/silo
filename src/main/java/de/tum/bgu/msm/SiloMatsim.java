@@ -42,7 +42,7 @@ public final class SiloMatsim {
 			logger.info("Scenario: " + Properties.get().main.scenarioName + ", Simulation start year: " + Properties.get().main.startYear);
 			SyntheticPopUs sp = new SyntheticPopUs(rb);
 			sp.runSP();
-			SiloModel model = new SiloModel(matsimConfig);
+			SiloModel model = new SiloModel();
 			model.runModel();
 			logger.info("Finished SILO.");
 		} catch (Exception e) {
