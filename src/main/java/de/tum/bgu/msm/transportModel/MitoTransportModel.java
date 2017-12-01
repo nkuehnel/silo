@@ -6,6 +6,7 @@ import java.util.ResourceBundle;
 
 import de.tum.bgu.msm.container.SiloModelContainer;
 import de.tum.bgu.msm.data.*;
+import de.tum.bgu.msm.io.input.InputFeed;
 import de.tum.bgu.msm.properties.Properties;
 import de.tum.bgu.msm.resources.Implementation;
 import de.tum.bgu.msm.transportModel.mitoMatsim.MitoMatsimTravelTimes;
@@ -73,12 +74,9 @@ public class MitoTransportModel implements TransportModelI {
 		for (int i = 0; i < geoData.getZones().length; i++) {
 			AreaType areaType = AreaType.RURAL; //TODO: put real area type in here
 			Zone zone = new Zone(geoData.getZones()[i], geoData.getSizeOfZonesInAcres()[i], areaType);
-//			zone.setRetailEmpl(SummarizeData.getRetailEmploymentByZone(geoData)[i]);
-//			zone.setOfficeEmpl(SummarizeData.getOfficeEmploymentByZone(geoData)[i]);
-//			zone.setOtherEmpl(SummarizeData.getOtherEmploymentByZone(geoData)[i]);
-//			zone.setTotalEmpl(SummarizeData.getTotalEmploymentByZone(geoData)[i]);
 			zones.put(zone.getZoneId(), zone);
 		}
+		JobDataManager.fillMitoZoneEmployees(zones);
 
 		Map<Integer, MitoHousehold> households = Household.convertHhs(zones);
 		for(Person person: Person.getPersons()) {
@@ -92,9 +90,10 @@ public class MitoTransportModel implements TransportModelI {
 			}
 		}
 
+        Map<String, TravelTimes> travelTimes = modelContainer.getAcc().getTravelTimes();
         logger.info("  SILO data being sent to MITO");
-        //InputFeed feed = new InputFeed(zones, travelTimes, households);
-        //mito.feedData(feed);
+        InputFeed feed = new InputFeed(zones, travelTimes, households);
+        mito.feedData(feed);
 
 
 		if (runMatsimAfterMito) {
@@ -106,13 +105,4 @@ public class MitoTransportModel implements TransportModelI {
     private void setBaseDirectory (String baseDirectory) {
         mito.setBaseDirectory(baseDirectory);
     }
-
-
-
-
-
-
-
-
-
 }

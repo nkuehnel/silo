@@ -17,7 +17,6 @@
 package de.tum.bgu.msm;
 
 import java.io.File;
-import java.util.ResourceBundle;
 
 import de.tum.bgu.msm.data.SummarizeData;
 import de.tum.bgu.msm.properties.Properties;
@@ -54,7 +53,7 @@ public class SiloModel {
 	private boolean runMatsim;
 	private boolean runTravelDemandModel;
 
-	public enum Implementation {MUC, MSTM, CAPE_TOWN, MSP}
+	public enum Implementation {MUNICH, MARYLAND, CAPE_TOWN, MSP}
 	private Implementation implementation;
 
 	private SiloModelContainer modelContainer;
@@ -87,11 +86,11 @@ public class SiloModel {
 		setupYears();
 
 		// create main objects and read synthetic population
-		dataContainer = SiloDataContainer.createSiloDataContainer(implementation);
+		dataContainer = SiloDataContainer.createSiloDataContainer();
 		if (Properties.get().main.writeSmallSynpop) {
 			dataContainer.getHouseholdData().writeOutSmallSynPop();
 		}
-		modelContainer = SiloModelContainer.createSiloModelContainer(implementation, dataContainer);
+		modelContainer = SiloModelContainer.createSiloModelContainer(dataContainer);
 		modelContainer.getCarOwnershipModel().initialize();
 
 		setupTransport();
@@ -219,10 +218,6 @@ public class SiloModel {
 			logger.info("  Simulating events");
 			// walk through all events
 			for (int i = 1; i <= em.getNumberOfEvents(); i++) {
-
-				//if (i > 5) continue;
-				//	    if (i%500000==0) logger.info("Processing event " + i);
-				// event[] stores event id in position [0] and person id in position [1]
 				Integer[] event = em.selectNextEvent();
 				if (event[1] == SiloUtil.trackPp || event[1] == SiloUtil.trackHh || event[1] == SiloUtil.trackDd)
 					SiloUtil.trackWriter.println ("Check event " + EventTypes.values()[event[0]] +  " for pp/hh/dd " +
