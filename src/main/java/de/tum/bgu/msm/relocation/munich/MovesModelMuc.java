@@ -21,12 +21,17 @@ import de.tum.bgu.msm.relocation.SelectRegionJSCalculator;
 import javax.script.ScriptException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MovesModelMuc extends AbstractDefaultMovesModel {
 
+    private Map<Integer, Double[][]> utilityRegionByIncomeAndRaceMap;
     private float[] regionalShareForeigners;
     private SelectRegionJSCalculator regionCalculator;
     private SelectDwellingJSCalculator dwellingCalculator;
+
+    private float alphaWorkDistance = 4;
 
     public MovesModelMuc(GeoData geoData) {
         super(geoData);
@@ -37,7 +42,7 @@ public class MovesModelMuc extends AbstractDefaultMovesModel {
         float[] zonalShareForeigners = new float[geoData.getZones().length];
         regionalShareForeigners = new float[geoData.getRegionList().length];
         SiloUtil.setArrayToValue(zonalShareForeigners, 0f);
-        for (Household hh: Household.getHouseholdArray()) {
+        for (Household hh : Household.getHouseholdArray()) {
             int region = geoData.getRegionOfZone(hh.getHomeZone());
             if (hh.getNationality() != Nationality.german) {
                 zonalShareForeigners[geoData.getZoneIndex(hh.getHomeZone())]++;
@@ -45,7 +50,7 @@ public class MovesModelMuc extends AbstractDefaultMovesModel {
             }
         }
         int[] hhByZone = HouseholdDataManager.getNumberOfHouseholdsByZone(geoData);
-        for (int zone: geoData.getZones()) {
+        for (int zone : geoData.getZones()) {
             if (hhByZone[geoData.getZoneIndex(zone)] > 0) {
                 zonalShareForeigners[geoData.getZoneIndex(zone)] =
                         zonalShareForeigners[geoData.getZoneIndex(zone)] / hhByZone[geoData.getZoneIndex(zone)];
@@ -54,7 +59,7 @@ public class MovesModelMuc extends AbstractDefaultMovesModel {
             }
         }
         int[] hhByRegion = HouseholdDataManager.getNumberOfHouseholdsByRegion(geoData);
-        for (int region: geoData.getRegionList()) {
+        for (int region : geoData.getRegionList()) {
             if (hhByRegion[geoData.getRegionIndex(region)] > 0) {
                 regionalShareForeigners[geoData.getRegionIndex(region)] =
                         regionalShareForeigners[geoData.getRegionIndex(region)] / hhByRegion[geoData.getRegionIndex(region)];
@@ -63,7 +68,6 @@ public class MovesModelMuc extends AbstractDefaultMovesModel {
             }
         }
     }
-
 
 
 //    private double convertDistToWorkToUtil (Household hh, int homeZone) {
@@ -115,24 +119,60 @@ public class MovesModelMuc extends AbstractDefaultMovesModel {
         calculateShareOfForeignersByZoneAndRegion();
 
         int highestRegion = SiloUtil.getHighestVal(regions);
-        int[] regPrice = new int[highestRegion + 1];
-        float[] regAcc = new float[highestRegion + 1];
-        for (int region: regions) {
-            regPrice[geoData.getRegionIndex(region)] = calculateRegPrice(region);
-            regAcc[geoData.getRegionIndex(region)] = (float) convertAccessToUtility(siloModelContainer.getAcc().getRegionalAccessibility(region));
+        Map<Integer, Integer> regionalPriceMap = new HashMap<>();
+        Map<Integer, Float> regionalAccessibilityMap = new HashMap<>();
+
+
+        //int[] regPrice = new int[highestRegion + 1];
+        //float[] regAcc = new float[highestRegion + 1];
+        for (int region : regions) {
+            //regPrice[geoData.getRegionIndex(region)] = calculateRegPrice(region);
+            regionalPriceMap.put(region, calculateRegPrice(region));
+            // regAcc[geoData.getRegionIndex(region)] = (float) convertAccessToUtility(siloModelContainer.getAcc().getRegionalAccessibility(region));
+            regionalAccessibilityMap.put(region, (float) convertAccessToUtility(siloModelContainer.getAcc().getRegionalAccessibility(region)));
         }
 
-        utilityRegion = new double[Properties.get().main.incomeBrackets.length + 1][Nationality.values().length][regions.length];
-        for (int income = 1; income <= Properties.get().main.incomeBrackets.length + 1; income++) {
+
+        utilityRegionByIncomeAndRaceMap = new HashMap<>();
+       // utilityRegion = new double[Properties.get().main.incomeBrackets.length + 1][Nationality.values().length][regions.length];
+        for (int region : regions) {
+            Double[][] utilitiesForRegion = new Double[Properties.get().main.incomeBrackets.length+1][Nationality.values().length];
+            for (int income = 1; income <= Properties.get().main.incomeBrackets.length + 1; income++) {
+                float priceUtil = (float) convertPriceToUtility(regionalPriceMap.get(region), income);
+                for (Nationality nationality : Nationality.values()) {
+
+                    regionCalculator.setIncomeGroup(income - 1);
+                    regionCalculator.setNationality(nationality);
+                    regionCalculator.setMedianPrice(priceUtil);
+                    regionCalculator.setForeignersShare(regionalShareForeigners[geoData.getRegionIndex(region)]);
+                    regionCalculator.setAccessibility(regionalAccessibilityMap.get(region));
+                    double utility;
+                    try {
+                        utility = regionCalculator.calculate();
+                        utilitiesForRegion[income - 1][nationality.ordinal()] = utility;
+                    } catch (ScriptException e) {
+                        e.printStackTrace();
+                    }
+
+
+
+                }
+
+            }
+            utilityRegionByIncomeAndRaceMap.put(region, utilitiesForRegion);
+        }
+
+
+       /* for (int income = 1; income <= Properties.get().main.incomeBrackets.length + 1; income++) {
 
             float[] priceUtil = new float[highestRegion + 1];
 
-            for (int region: regions) {
+            for (int region : regions) {
                 priceUtil[region] = (float) convertPriceToUtility(regPrice[region], income);
             }
 
-            for (Nationality nationality: Nationality.values()) {
-                for (int region: regions) {
+            for (Nationality nationality : Nationality.values()) {
+                for (int region : regions) {
                     regionCalculator.setIncomeGroup(income - 1);
                     regionCalculator.setNationality(nationality);
                     regionCalculator.setMedianPrice(priceUtil[region]);
@@ -141,13 +181,13 @@ public class MovesModelMuc extends AbstractDefaultMovesModel {
                     double utility = 0;
                     try {
                         utility = regionCalculator.calculate();
-                        utilityRegion[income - 1][nationality.ordinal()][region-1] = utility;
+                        utilityRegion[income - 1][nationality.ordinal()][region - 1] = utility;
                     } catch (ScriptException e) {
                         e.printStackTrace();
                     }
                 }
             }
-        }
+        }*/
         householdsByRegion = HouseholdDataManager.getNumberOfHouseholdsByRegion(geoData);
     }
 
@@ -158,26 +198,35 @@ public class MovesModelMuc extends AbstractDefaultMovesModel {
     }
 
 
-    private double[] getRegionUtilities (HouseholdType ht, Race race, int[] workZones, SiloModelContainer siloModelContainer) {
+    private Map<Integer, Double> getRegionUtilities(HouseholdType ht, Race race, int[] workZones, SiloModelContainer siloModelContainer) {
         // return utility of regions based on household type and based on work location of workers in household
 
+        Map<Integer, Double> utilitiesByRegion = new HashMap<>();
         int[] regions = geoData.getRegionList();
         double[] util = new double[regions.length];
+        Map<Integer, Double> workDistanceFactorMap = new HashMap<>();
         double[] workDistanceFactor = new double[regions.length];
         for (int i = 0; i < regions.length; i++) {
             workDistanceFactor[i] = 1;
+            double workDistanceFactorValue = 1;
             if (workZones != null) {  // for inmigrating household, work places are selected after household found a home
                 for (int workZone : workZones) {
                     int smallestDistInMin = (int) siloModelContainer.getAcc().getMinDistanceFromZoneToRegion(workZone, regions[i]);
+                    workDistanceFactorValue = workDistanceFactorValue * siloModelContainer.getAcc().getWorkTLFD(smallestDistInMin);
+
                     workDistanceFactor[i] = workDistanceFactor[i] * siloModelContainer.getAcc().getWorkTLFD(smallestDistInMin);
                 }
             }
+            workDistanceFactorMap.put(regions[i], workDistanceFactorValue);
+
+
         }
         int incomeCat = HouseholdType.convertHouseholdTypeToIncomeCategory(ht);
-        for (int i = 0; i < regions.length; i++) {
-            util[i] = utilityRegion[incomeCat - 1][race.ordinal()][i] * workDistanceFactor[i];
+        for (int region : regions) {
+            utilitiesByRegion.put(region, utilityRegionByIncomeAndRaceMap.get(region)[incomeCat - 1][race.ordinal()] + alphaWorkDistance*workDistanceFactorMap.get(region));
+
         }
-        return util;
+        return utilitiesByRegion;
     }
 
 
@@ -187,20 +236,22 @@ public class MovesModelMuc extends AbstractDefaultMovesModel {
 
         // data preparation
         int wrkCount = 0;
-        for (Person pp: persons) if (pp.getOccupation() == 1 && pp.getWorkplace() != -2) wrkCount++;
+        for (Person pp : persons) if (pp.getOccupation() == 1 && pp.getWorkplace() != -2) wrkCount++;
         int pos = 0;
         int householdIncome = 0;
         int[] workZones = new int[wrkCount];
         Race householdRace = persons[0].getRace();
-        for (Person pp: persons) if (pp.getOccupation() == 1 && pp.getWorkplace() != -2) {
-            workZones[pos] = Job.getJobFromId(pp.getWorkplace()).getZone();
-            pos++;
-            householdIncome += pp.getIncome();
-            if (pp.getRace() != householdRace) householdRace = Race.black; //changed this so race is a proxy of nationality
-        }
-        if (householdRace == Race.other){
+        for (Person pp : persons)
+            if (pp.getOccupation() == 1 && pp.getWorkplace() != -2) {
+                workZones[pos] = Job.getJobFromId(pp.getWorkplace()).getZone();
+                pos++;
+                householdIncome += pp.getIncome();
+                if (pp.getRace() != householdRace)
+                    householdRace = Race.black; //changed this so race is a proxy of nationality
+            }
+        if (householdRace == Race.other) {
             householdRace = Race.black;
-        } else if (householdRace == Race.hispanic){
+        } else if (householdRace == Race.hispanic) {
             householdRace = Race.black;
         }
         int incomeBracket = HouseholdDataManager.getIncomeCategoryForIncome(householdIncome);
@@ -208,39 +259,58 @@ public class MovesModelMuc extends AbstractDefaultMovesModel {
 
         // Step 1: select region
         int[] regions = geoData.getRegionList();
-        double[] regionUtilities = getRegionUtilities(ht, householdRace, workZones, modelContainer);
+
+        Map<Integer, Double> utilitiesByRegion = getRegionUtilities(ht, householdRace, workZones, modelContainer);
+
+
+
         // todo: adjust probabilities to make that households tend to move shorter distances (dist to work is already represented)
-        String normalizer = "population";
-        int totalVacantDd = 0;
-        for (int region: geoData.getRegionList()) totalVacantDd += RealEstateDataManager.getNumberOfVacantDDinRegion(region);
-        for (int i = 0; i < regionUtilities.length; i++) {
+       // String normalizer = "noNormalization";
+//        int totalVacantDd = 0;
+//        for (int region : geoData.getRegionList())
+//            totalVacantDd += RealEstateDataManager.getNumberOfVacantDDinRegion(region);
+        /*for (int i = 0; i < regionUtilities.length; i++) {
             switch (normalizer) {
                 case ("vacDd"): {
                     // Multiply utility of every region by number of vacant dwellings to steer households towards available dwellings
                     // use number of vacant dwellings to calculate attractivity of region
                     regionUtilities[i] = regionUtilities[i] * (float) RealEstateDataManager.getNumberOfVacantDDinRegion(regions[i]);
-                } case ("shareVacDd"): {
+                }
+                case ("shareVacDd"): {
                     // use share of empty dwellings to calculate attractivity of region
                     regionUtilities[i] = regionUtilities[i] * ((float) RealEstateDataManager.getNumberOfVacantDDinRegion(regions[i]) / (float) totalVacantDd);
-                } case ("dampenedVacRate"): {
+                }
+                case ("dampenedVacRate"): {
                     double x = (double) RealEstateDataManager.getNumberOfVacantDDinRegion(regions[i]) /
                             (double) RealEstateDataManager.getNumberOfDDinRegion(regions[i]) * 100d;  // % vacancy
                     double y = 1.4186E-03 * Math.pow(x, 3) - 6.7846E-02 * Math.pow(x, 2) + 1.0292 * x + 4.5485E-03;
                     y = Math.min(5d, y);                                                // % vacancy assumed to be ready to move in
                     regionUtilities[i] = regionUtilities[i] * (y / 100d * RealEstateDataManager.getNumberOfDDinRegion(regions[i]));
                     if (RealEstateDataManager.getNumberOfVacantDDinRegion(regions[i]) < 1) regionUtilities[i] = 0d;
-                } case ("population"): {
+                }
+                case ("population"): {
                     regionUtilities[i] = regionUtilities[i] * householdsByRegion[i];
-                } case ("noNormalization"): {
+                }
+                case ("noNormalization"): {
                     // do nothing
                 }
             }
+        }*/
+        int[] regionNames = new int[utilitiesByRegion.size()];
+        double[] regionUtilities = new double[utilitiesByRegion.size()];
+        for (int i = 0; i < utilitiesByRegion.size(); i++){
+            regionNames[i] = (int) utilitiesByRegion.keySet().toArray()[i];
+            regionUtilities[i] = Math.exp(utilitiesByRegion.get(regionNames[i]));
         }
+
         if (SiloUtil.getSum(regionUtilities) == 0) return -1;
-        int selectedRegion = SiloUtil.select(regionUtilities);
+        int selectedRegion = SiloUtil.select(regionUtilities, regionNames);
+
+
+
 
         // Step 2: select vacant dwelling in selected region
-        int[] vacantDwellings = RealEstateDataManager.getListOfVacantDwellingsInRegion(regions[selectedRegion]);
+        int[] vacantDwellings = RealEstateDataManager.getListOfVacantDwellingsInRegion(selectedRegion);
         double[] expProbs = SiloUtil.createArrayWithValue(vacantDwellings.length, 0d);
         double sumProbs = 0.;
         int maxNumberOfDwellings = Math.min(20, vacantDwellings.length);  // No household will evaluate more than 20 dwellings
@@ -255,7 +325,7 @@ public class MovesModelMuc extends AbstractDefaultMovesModel {
             } catch (ScriptException e) {
                 e.printStackTrace();
             }
-            sumProbs =+ expProbs[i];
+            sumProbs = +expProbs[i];
         }
         if (sumProbs == 0) return -1;    // could not find dwelling that fits restrictions
         int selected = SiloUtil.select(expProbs, sumProbs);

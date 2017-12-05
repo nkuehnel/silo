@@ -12,6 +12,7 @@ import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.TransportMode;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -28,6 +29,7 @@ public class Accessibility {
     private double[] autoAccessibility;
     private double[] transitAccessibility;
     private double[] regionalAccessibility;
+    private Map<Integer, Double> regionalAccessibilityMap;
     private float[] workTLFD;
     private float autoOperatingCosts;
     private Matrix travelTimeToRegion;
@@ -203,11 +205,13 @@ at de.tum.bgu.msm.data.Accessibility.calculateAccessibilities(Accessibility.java
         transitAccessibility = SiloUtil.scaleArray(transitAccessibility, 100);
 
         regionalAccessibility = new double[geoData.getRegionList().length];
+        regionalAccessibilityMap = new HashMap<>();
         for (int region: geoData.getRegionList()) {
             int[] zonesInThisRegion = geoData.getZonesInRegion(region);
             double sm = 0;
             for (int zone: zonesInThisRegion) sm += autoAccessibility[geoData.getZoneIndex(zone)];
              regionalAccessibility[geoData.getRegionIndex(region)] = sm / zonesInThisRegion.length;
+             regionalAccessibilityMap.put(region, sm/zonesInThisRegion.length);
         }
     }
 
@@ -229,18 +233,28 @@ at de.tum.bgu.msm.data.Accessibility.calculateAccessibilities(Accessibility.java
 
     private void calculateDistanceToRegions () {
         // calculate the minimal distance from each zone to every region
+        // test with the average
+
         travelTimeToRegion = new Matrix(geoData.getZones().length, geoData.getRegionList().length);
         travelTimeToRegion.setExternalNumbersZeroBased(geoData.getZones(), geoData.getRegionList());
+
+        int numberOfZones = geoData.getZones().length;
         for (int iz: geoData.getZones()) {
             float[] minDist = new float[SiloUtil.getHighestVal(geoData.getRegionList())+1];
-            for (int i = 0; i < minDist.length; i++) minDist[i] = Float.MAX_VALUE;
+            int[] numberOfZonesPerRegion = new int[SiloUtil.getHighestVal(geoData.getRegionList())+1];
+            for (int i = 0; i < minDist.length; i++) minDist[i] = 0;
             for (int jz: geoData.getZones()) {
                 int region = geoData.getRegionOfZone(jz);
-                float travelTime = getAutoTravelTime(iz, jz);
-                minDist[region] = Math.min(minDist[region], travelTime);
+                //float travelTime =
+                minDist[region] += getAutoTravelTime(iz, jz);
+                numberOfZonesPerRegion[region]++;
+
             }
-            for (int region: geoData.getRegionList()) travelTimeToRegion.setValueAt(iz, region, minDist[region]);
+            //todo crashes if 0 zones at a region? - optimize loop!
+            //region is region name!
+            for (int region: geoData.getRegionList()) travelTimeToRegion.setValueAt(iz, region, minDist[region] / numberOfZonesPerRegion[region] );
         }
+
     }
 
 
@@ -261,7 +275,8 @@ at de.tum.bgu.msm.data.Accessibility.calculateAccessibilities(Accessibility.java
 
 
     public double getRegionalAccessibility (int region) {
-        return regionalAccessibility[geoData.getRegionIndex(region)];
+        return regionalAccessibilityMap.get(region);
+        //return regionalAccessibility[geoData.getRegionIndex(region)];
     }
 
 

@@ -54,13 +54,12 @@ public class MitoTransportModel implements TransportModelI {
     public void runTransportModel(int year) {
     	MitoModel.setScenarioName (Properties.get().main.scenarioName);
     	updateData(year);
-		logger.info("  Update MITO data for the year " + year);
-    	//MitoModel.setScenarioName (SiloUtil.scenarioName);
-    	updateData(year);
-    	logger.info("  Running travel demand model MITO for the year " + year);
-    	//mito.runModel();
-		logger.info("  Running traffic assignment for the year " + year);
 
+    	logger.info("  Running travel demand model MITO for the year " + year);
+    	mito.runModel();
+
+
+    	logger.info("  Running traffic assignment for the year " + year);
 		if (runMatsimAfterMito) {
 			trafficAssignmentModel.runTrafficAssignment();
 		}
