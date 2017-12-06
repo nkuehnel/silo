@@ -456,11 +456,6 @@ public class HouseholdDataManager {
         // todo: Add distance in kilometers to this summary
         SummarizeData.resultFile("aveCommuteDistByRegion,minutes");
         for (int i: geoData.getRegionList()) SummarizeData.resultFile(i + "," + commDist[0][i] / commDist[1][i]);
-        double avgCommute = 0;
-        for (int i: geoData.getRegionList()) avgCommute += commDist[0][i] / commDist[1][i];
-        logger.warn("Average commuting time in minutes: " + avgCommute / geoData.getRegionList().length);
-
-
         int[] carOwnership = new int[4];
         for (Household hh: Household.getHouseholdArray()) {
             carOwnership[hh.getAutos()]++;
