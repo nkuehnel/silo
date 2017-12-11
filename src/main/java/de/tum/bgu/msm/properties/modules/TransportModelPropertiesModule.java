@@ -26,6 +26,10 @@ public class TransportModelPropertiesModule {
     public final String matsimDistanceSkimFile;
     public final String matsimDepartureTimeFile;
     public final boolean runMatsimAfterMito;
+    public final boolean runTransitInMatsim;
+    public final String matsimScheduleFile;
+    public final String matsimVehicleFile;
+
 
     public TransportModelPropertiesModule(ResourceBundle bundle) {
         modelYears = ResourceUtil.getIntegerArray(bundle, "transport.model.years");
@@ -45,5 +49,8 @@ public class TransportModelPropertiesModule {
         matsimDistanceSkimFile = ResourceUtil.getProperty(bundle, "matsim.distance.skim.file");
         matsimDepartureTimeFile = ResourceUtil.getProperty(bundle, "matsim.departure.times");
         runMatsimAfterMito = ResourceUtil.getBooleanProperty(bundle, "run.matsim.after.mito", false);
+        runTransitInMatsim = ResourceUtil.getBooleanProperty(bundle, "run.matsim.transit", false);
+        matsimScheduleFile = ResourceUtil.getProperty(bundle, "matsim.schedule.file");
+        matsimVehicleFile = ResourceUtil.getProperty(bundle, "matsim.vehicle.file");
     }
 }

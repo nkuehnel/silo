@@ -26,6 +26,8 @@ import org.matsim.utils.leastcostpathtree.LeastCostPathTree;
 import java.util.Map;
 
 import java.util.ResourceBundle;
+import java.util.Set;
+import java.util.TreeSet;
 
 public class TrafficAssignmentModel {
 
@@ -96,6 +98,16 @@ public class TrafficAssignmentModel {
         matsimConfig.qsim().setStartTime(0);
         matsimConfig.qsim().setEndTime(24*60*60);
 
+        matsimConfig.transit().setUseTransit(Properties.get().transportModel.runTransitInMatsim);
+        Set<String> transitModes = new TreeSet<>();
+        transitModes.add("pt");
+        matsimConfig.transit().setTransitModes(transitModes);
+
+        matsimConfig.transit().setTransitScheduleFile(trafficAssignmentDirectory + Properties.get().transportModel.matsimScheduleFile);
+        matsimConfig.transit().setVehiclesFile(trafficAssignmentDirectory + Properties.get().transportModel.matsimVehicleFile);
+
+
+
         matsimConfig.controler().setFirstIteration(1);
         matsimConfig.controler().setLastIteration(numberOfIterations);
         matsimConfig.controler().setWritePlansInterval(numberOfIterations);
@@ -125,6 +137,15 @@ public class TrafficAssignmentModel {
         strategySettings3.setWeight(1); //originally 0
         strategySettings3.setDisableAfter((int) (numberOfIterations * 0.7));
         matsimConfig.strategy().addStrategySettings(strategySettings3);
+
+        //mode choice internal to matsim
+        if (Properties.get().transportModel.runTransitInMatsim) {
+            StrategyConfigGroup.StrategySettings strategySettings4 = new StrategyConfigGroup.StrategySettings();
+            strategySettings4.setStrategyName("ChangeTripMode");
+            strategySettings4.setWeight(1); //originally 0
+            strategySettings4.setDisableAfter((int) (numberOfIterations * 0.7));
+            matsimConfig.strategy().addStrategySettings(strategySettings4);
+        }
 
         matsimConfig.strategy().setMaxAgentPlanMemorySize(4);
 
