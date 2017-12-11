@@ -27,6 +27,8 @@ public class MovesModelMuc extends AbstractDefaultMovesModel {
     private float[] regionalShareForeigners;
     private SelectRegionJSCalculator regionCalculator;
     private SelectDwellingJSCalculator dwellingCalculator;
+    private int sameCounter = 0;
+    private int differentCounter = 0;
 
     public MovesModelMuc(GeoData geoData) {
         super(geoData);
@@ -148,6 +150,14 @@ public class MovesModelMuc extends AbstractDefaultMovesModel {
                 }
             }
         }
+
+
+        logger.warn("In the last year, different region  " + differentCounter + " while same region " + sameCounter );
+
+        differentCounter = 0;
+        sameCounter = 0;
+
+
         householdsByRegion = HouseholdDataManager.getNumberOfHouseholdsByRegion(geoData);
     }
 
@@ -168,14 +178,18 @@ public class MovesModelMuc extends AbstractDefaultMovesModel {
             workDistanceFactor[i] = 1;
             if (workZones != null) {  // for inmigrating household, work places are selected after household found a home
                 for (int workZone : workZones) {
-                    int smallestDistInMin = (int) siloModelContainer.getAcc().getMinDistanceFromZoneToRegion(workZone, regions[i]);
-                    workDistanceFactor[i] = workDistanceFactor[i] * siloModelContainer.getAcc().getWorkTLFD(smallestDistInMin);
+                    if (geoData.getRegionOfZone(workZone) == regions[i]){
+                        workDistanceFactor[i] = workDistanceFactor[i] * 25;
+                    } else {
+                        int smallestDistInMin = (int) siloModelContainer.getAcc().getMinDistanceFromZoneToRegion(workZone, regions[i]);
+                        workDistanceFactor[i] = workDistanceFactor[i] * siloModelContainer.getAcc().getWorkTLFD(smallestDistInMin);
+                    }
                 }
             }
         }
         int incomeCat = HouseholdType.convertHouseholdTypeToIncomeCategory(ht);
         for (int i = 0; i < regions.length; i++) {
-            util[i] = utilityRegion[incomeCat - 1][race.ordinal()][i] * workDistanceFactor[i];
+            util[i] = Math.exp( utilityRegion[incomeCat - 1][race.ordinal()][regions[i]-1] * workDistanceFactor[i]);
         }
         return util;
     }
@@ -212,7 +226,7 @@ public class MovesModelMuc extends AbstractDefaultMovesModel {
         // todo: adjust probabilities to make that households tend to move shorter distances (dist to work is already represented)
         String normalizer = "population";
         int totalVacantDd = 0;
-        for (int region: geoData.getRegionList()) totalVacantDd += RealEstateDataManager.getNumberOfVacantDDinRegion(region);
+        /*for (int region: geoData.getRegionList()) totalVacantDd += RealEstateDataManager.getNumberOfVacantDDinRegion(region);
         for (int i = 0; i < regionUtilities.length; i++) {
             switch (normalizer) {
                 case ("vacDd"): {
@@ -235,12 +249,25 @@ public class MovesModelMuc extends AbstractDefaultMovesModel {
                     // do nothing
                 }
             }
-        }
+        }*/
         if (SiloUtil.getSum(regionUtilities) == 0) return -1;
-        int selectedRegion = SiloUtil.select(regionUtilities);
+        int selectedRegion = SiloUtil.select(regionUtilities, regions);
+
+        if (workZones.length == 1){
+            if (geoData.getRegionOfZone(workZones[0]) == selectedRegion){
+                sameCounter++;
+                //logger.warn("same: " + sameCounter);
+            } else {
+                differentCounter++;
+                //logger.warn("different: " + differentCounter);
+            }
+        }
+
+
+
 
         // Step 2: select vacant dwelling in selected region
-        int[] vacantDwellings = RealEstateDataManager.getListOfVacantDwellingsInRegion(regions[selectedRegion]);
+        int[] vacantDwellings = RealEstateDataManager.getListOfVacantDwellingsInRegion(selectedRegion);
         double[] expProbs = SiloUtil.createArrayWithValue(vacantDwellings.length, 0d);
         double sumProbs = 0.;
         int maxNumberOfDwellings = Math.min(20, vacantDwellings.length);  // No household will evaluate more than 20 dwellings
@@ -260,6 +287,9 @@ public class MovesModelMuc extends AbstractDefaultMovesModel {
         if (sumProbs == 0) return -1;    // could not find dwelling that fits restrictions
         int selected = SiloUtil.select(expProbs, sumProbs);
         return vacantDwellings[selected];
+
+
+
     }
 
     @Override
