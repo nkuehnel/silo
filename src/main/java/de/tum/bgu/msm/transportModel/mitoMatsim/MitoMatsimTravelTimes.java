@@ -11,8 +11,10 @@ import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.network.Node;
 import org.matsim.core.network.NetworkUtils;
+import org.matsim.core.network.algorithms.NetworkCleaner;
+
 import org.matsim.utils.leastcostpathtree.LeastCostPathTree;
-import org.opengis.feature.simple.SimpleFeature;
+
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -33,6 +35,11 @@ public class MitoMatsimTravelTimes implements TravelTimes {
 
     public MitoMatsimTravelTimes(LeastCostPathTree leastCoastPathTree, Network network, TrafficAssignmentUtil trafficAssignmentUtil, Map<Integer, Zone> zones) {
         this.leastCoastPathTree = leastCoastPathTree;
+
+        NetworkCleaner nc = new NetworkCleaner();
+        nc.run(network);
+
+
         this.network = network;
         this.trafficAssignmentUtil = trafficAssignmentUtil;
         initialize(zones);

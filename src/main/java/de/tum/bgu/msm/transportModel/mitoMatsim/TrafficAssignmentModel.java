@@ -123,18 +123,18 @@ public class TrafficAssignmentModel {
         //Strategy
         StrategyConfigGroup.StrategySettings strategySettings1 = new StrategyConfigGroup.StrategySettings();
         strategySettings1.setStrategyName("ChangeExpBeta");
-        strategySettings1.setWeight(0.5); //originally 0.8
+        strategySettings1.setWeight(0.8); //originally 0.8
         matsimConfig.strategy().addStrategySettings(strategySettings1);
 
         StrategyConfigGroup.StrategySettings strategySettings2 = new StrategyConfigGroup.StrategySettings();
         strategySettings2.setStrategyName("ReRoute");
-        strategySettings2.setWeight(1);//originally 0.2
+        strategySettings2.setWeight(0.2);//originally 0.2
         strategySettings2.setDisableAfter((int) (numberOfIterations * 0.7));
         matsimConfig.strategy().addStrategySettings(strategySettings2);
 
         StrategyConfigGroup.StrategySettings strategySettings3 = new StrategyConfigGroup.StrategySettings();
         strategySettings3.setStrategyName("TimeAllocationMutator");
-        strategySettings3.setWeight(1); //originally 0
+        strategySettings3.setWeight(0.1); //originally 0
         strategySettings3.setDisableAfter((int) (numberOfIterations * 0.7));
         matsimConfig.strategy().addStrategySettings(strategySettings3);
 
@@ -142,8 +142,8 @@ public class TrafficAssignmentModel {
         if (Properties.get().transportModel.runTransitInMatsim) {
             StrategyConfigGroup.StrategySettings strategySettings4 = new StrategyConfigGroup.StrategySettings();
             strategySettings4.setStrategyName("ChangeTripMode");
-            strategySettings4.setWeight(1); //originally 0
-            strategySettings4.setDisableAfter((int) (numberOfIterations * 0.7));
+            strategySettings4.setWeight(0.2); //originally 0
+            //strategySettings4.setDisableAfter((int) (numberOfIterations * 0.7));
             matsimConfig.strategy().addStrategySettings(strategySettings4);
         }
 
