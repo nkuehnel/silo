@@ -1,0 +1,14 @@
+var calculateSwitchToAutonomousVehicleProbabilities = function(ratio, income) {
+
+    intercept = 2.5;
+    betaRatio = -3.5;
+    betaIncome = 0.00035;
+
+    results = new Array(2);
+    utility = intercept + (betaRatio * ratio) + (betaIncome * income);
+    result = Math.exp(utility);
+    results[0] = result / (1.0 + result);
+    results[1] = 1 - results[0];
+
+    return Java.to(results, "double[]");
+}
