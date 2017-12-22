@@ -53,7 +53,6 @@ public class SiloModel {
 	private boolean runTravelDemandModel;
 
 	public enum Implementation {MUNICH, MARYLAND, CAPE_TOWN, MSP}
-	private Implementation implementation;
 
 	private SiloModelContainer modelContainer;
 	private SiloDataContainer dataContainer;
@@ -79,7 +78,7 @@ public class SiloModel {
 	}
 
 	private void setupModel() {
-		logger.info("Setting up SILO Model (Implementation " + implementation + ")");
+		logger.info("Setting up SILO Model (Implementation " + Properties.get().main.implementation + ")");
 		setupYears();
 
 		// create main objects and read synthetic population
@@ -127,12 +126,16 @@ public class SiloModel {
 			transportModel = new MatsimTransportModel(dataContainer.getHouseholdData(), modelContainer.getAcc(), matsimConfig);
 			modelContainer.getAcc().readPtSkim(Properties.get().main.startYear);
 			transportModel.runTransportModel(Properties.get().main.startYear);
-		} else {
+		} else if(runTravelDemandModel){
 			logger.info("  MITO is used as the transport model");
 			modelContainer.getAcc().readCarSkim(Properties.get().main.startYear);
 			modelContainer.getAcc().readPtSkim(Properties.get().main.startYear);
 			File rbFile = new File(Properties.get().transportModel.demandModelPropertiesPath);
 			transportModel = new MitoTransportModel(ResourceUtil.getPropertyBundle(rbFile), Properties.get().main.baseDirectory, dataContainer.getGeoData(), modelContainer);
+		} else {
+			modelContainer.getAcc().readCarSkim(Properties.get().main.startYear);
+			modelContainer.getAcc().readPtSkim(Properties.get().main.startYear);
+			logger.info(" No transport model is used");
 		}
 	}
 
@@ -365,4 +368,3 @@ public class SiloModel {
 		cblcm.finishModel();
 	}
 }
-

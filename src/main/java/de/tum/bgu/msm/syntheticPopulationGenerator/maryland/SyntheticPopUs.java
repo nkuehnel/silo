@@ -1,10 +1,10 @@
 package de.tum.bgu.msm.syntheticPopulationGenerator.maryland;
 
 import com.pb.common.datafile.TableDataSet;
-import de.tum.bgu.msm.SiloModel;
+import com.pb.common.util.ResourceUtil;
+import de.tum.bgu.msm.SiloUtil;
 import de.tum.bgu.msm.autoOwnership.maryland.MaryLandCarOwnershipModel;
 import de.tum.bgu.msm.data.*;
-import de.tum.bgu.msm.SiloUtil;
 import de.tum.bgu.msm.data.maryland.GeoDataMstm;
 import de.tum.bgu.msm.properties.Properties;
 import de.tum.bgu.msm.syntheticPopulationGenerator.SyntheticPopI;
@@ -14,8 +14,6 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
-
-import com.pb.common.util.ResourceUtil;
 
 /**
  * Generates a simple synthetic population for the MSTM Study Area
@@ -58,7 +56,6 @@ public class SyntheticPopUs implements SyntheticPopI {
     public SyntheticPopUs(ResourceBundle rb) {
         // constructor
         this.rb = rb;
-        Properties.initializeProperties(rb, SiloModel.Implementation.MARYLAND);
     }
 
 
@@ -410,7 +407,7 @@ public class SyntheticPopUs implements SyntheticPopI {
             int selectedYear = selectYear(yearBuilt);
             new Dwelling(newDdId, taz, newHhId, ddType, bedRooms, quality, price, 0, selectedYear);
             if (gender[0] == 0) return;   // this dwelling is empty, do not create household
-            Household hh = new Household(newHhId, newDdId, taz, hhSize, autos);
+            Household hh = new Household(newHhId, newDdId, taz, autos);
             for (int s = 0; s < hhSize; s++) {
                 int newPpId = HouseholdDataManager.getNextPersonId();
 
@@ -431,11 +428,11 @@ public class SyntheticPopUs implements SyntheticPopI {
                         Job.getJobFromId(workplace).setWorkerID(newPpId);  // -2 for jobs outside of the study area
                     }
                 }
-                Person pp = new Person(newPpId, newHhId, age[s], gender[s], race[s], occ, workplace, income[s]);
-                hh.addPersonForInitialSetup(pp);
+                Person pp = new Person(newPpId, age[s], gender[s], race[s], occ, workplace, income[s]);
+                hh.addPerson(pp);
             }
             hh.setType();
-            hh.setHouseholdRace();
+            hh.determineHouseholdRace();
             definePersonRolesInHousehold(hh, relShp);
             // trace persons, households and dwellings
             for (Person pp: hh.getPersons()) if (pp.getId() == SiloUtil.trackPp) {
@@ -646,7 +643,7 @@ public class SyntheticPopUs implements SyntheticPopI {
     private void definePersonRolesInHousehold (Household hh, int[] relShp) {
         // define roles as single, married or child
 
-        Person[] pp = hh.getPersons();
+        Person[] pp = hh.getPersons().toArray(new Person[0]);
         HashMap<Integer, Integer> coupleCounter = new HashMap<>();
         coupleCounter.put(1, 0);
         coupleCounter.put(2, 0);
@@ -701,7 +698,7 @@ public class SyntheticPopUs implements SyntheticPopI {
         jobData.calculateJobDensityByZone();
         MaryLandCarOwnershipModel ao = new MaryLandCarOwnershipModel(jobData, accessibility);   // calculate auto-ownership probabilities
         Map<Integer, int[]> households = new HashMap<>();
-        for (Household hh: Household.getHouseholdArray()) {
+        for (Household hh: Household.getHouseholds()) {
             households.put(hh.getId(), null);
         }
     }
@@ -876,7 +873,7 @@ public class SyntheticPopUs implements SyntheticPopI {
         // summarize number of people by PersonRole (married, single, child)
 
         int[][] roleCounter = new int[101][3];
-        for (Person pp: Person.getPersonArray()) {
+        for (Person pp: Person.getPersons()) {
             if (pp.getGender() == 1) continue;
             int age = Math.min(100, pp.getAge());
             roleCounter[age][pp.getRole().ordinal()]++;

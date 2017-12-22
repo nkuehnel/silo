@@ -6,6 +6,7 @@ import de.tum.bgu.msm.SiloUtil;
 import de.tum.bgu.msm.data.travelTimes.MatrixTravelTimes;
 import de.tum.bgu.msm.data.travelTimes.TravelTimes;
 import de.tum.bgu.msm.properties.Properties;
+import de.tum.bgu.msm.transportModel.matsim.MatsimPTDistances;
 import omx.OmxFile;
 import omx.OmxMatrix;
 import org.apache.log4j.Logger;
@@ -32,6 +33,7 @@ public class Accessibility {
     private float autoOperatingCosts;
     private Matrix travelTimeToRegion;
 	private final Map<String, TravelTimes> travelTimes = new LinkedHashMap<>();
+	private PTDistances ptDistances;
 
     public Accessibility(GeoData geoData) {
         this.geoData = geoData;
@@ -40,7 +42,7 @@ public class Accessibility {
 
 	public void initialize() {
         readWorkTripLengthFrequencyDistribution();
-        calculateDistanceToRegions();
+        calculateTravelTimesToRegions();
 	}
 
     public void readCarSkim(int year) {
@@ -227,8 +229,7 @@ at de.tum.bgu.msm.data.Accessibility.calculateAccessibilities(Accessibility.java
     }
 
 
-    private void calculateDistanceToRegions () {
-        // calculate the minimal distance from each zone to every region
+    private void calculateTravelTimesToRegions() {
         travelTimeToRegion = new Matrix(geoData.getZones().length, geoData.getRegionList().length);
         travelTimeToRegion.setExternalNumbersZeroBased(geoData.getZones(), geoData.getRegionList());
         for (int iz: geoData.getZones()) {
@@ -265,7 +266,7 @@ at de.tum.bgu.msm.data.Accessibility.calculateAccessibilities(Accessibility.java
     }
 
 
-    public float getMinDistanceFromZoneToRegion (int zone, int region) {
+    public float getMinTravelTimeFromZoneToRegion(int zone, int region) {
         return travelTimeToRegion.getValueAt(zone, region);
     }
 
@@ -286,5 +287,10 @@ at de.tum.bgu.msm.data.Accessibility.calculateAccessibilities(Accessibility.java
 			logger.info("Replace travel time for " + mode + " mode.");
 		}
 		this.travelTimes.put(mode, travelTimes);
+	}
+
+	
+	public void setPTDistances(MatsimPTDistances ptDistances) {
+		this.ptDistances = ptDistances;
 	}
 }
