@@ -33,10 +33,7 @@ import org.apache.log4j.Logger;
 import java.io.File;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
+import java.util.*;
 
 /**
  * Simulates marriage and divorce
@@ -370,7 +367,9 @@ public class MarryDivorceModel {
             }
         }
         if (onlyChildren) {
-            for (Person per: remainingPersons) {
+            Iterator<Person> iter = remainingPersons.iterator();
+            if(iter.hasNext()){
+                Person per = iter.next();
                 oldHh.removePerson(per, dataContainer);
                 newHh.addPerson(per);
                 if (per.getId() == SiloUtil.trackPp || oldHh.getId() == SiloUtil.trackHh ||
@@ -380,6 +379,17 @@ public class MarryDivorceModel {
                             " as remaining child.");
                 }
             }
+/*
+            for (Person per: remainingPersons) {
+                oldHh.removePerson(per, dataContainer);
+                newHh.addPerson(per);
+                if (per.getId() == SiloUtil.trackPp || oldHh.getId() == SiloUtil.trackHh ||
+                        newHh.getId() == SiloUtil.trackHh) {
+                    SiloUtil.trackWriter.println("Person " +
+                            per.getId() + " was moved from household " + oldHh.getId() + " to household " + newHh.getId() +
+                            " as remaining child.");
+                }
+            }*/
             newHh.determineHouseholdRace();
             newHh.setType();
         }
