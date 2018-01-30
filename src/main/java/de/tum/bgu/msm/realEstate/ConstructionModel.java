@@ -11,7 +11,6 @@ import de.tum.bgu.msm.events.EventTypes;
 import de.tum.bgu.msm.properties.Properties;
 import org.apache.log4j.Logger;
 
-import javax.script.ScriptException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.ArrayList;
@@ -304,11 +303,11 @@ public class ConstructionModel {
         double utils[] = modelContainer.getMove().updateUtilitiesOfVacantDwelling(dd, modelContainer);
         dd.setUtilitiesOfVacantDwelling(utils);
         dataContainer.getRealEstateData().addDwellingToVacancyList(dd);
-        EventManager.countEvent(EventTypes.ddConstruction);
+        EventManager.countEvent(EventTypes.DD_CONSTRUCTION);
 
         if (ddId == SiloUtil.trackDd) {
             SiloUtil.trackWriter.println("Dwelling " + ddId + " was constructed with these properties: ");
-            dd.logAttributes(SiloUtil.trackWriter);
+            SiloUtil.trackWriter.println(dd.toString());
         }
     }
 }

@@ -1,6 +1,6 @@
 package de.tum.bgu.msm.demography;
 
-import de.tum.bgu.msm.SiloModel;
+import de.tum.bgu.msm.Implementation;
 import de.tum.bgu.msm.SiloUtil;
 import de.tum.bgu.msm.container.SiloDataContainer;
 import de.tum.bgu.msm.data.Household;
@@ -33,7 +33,7 @@ public class DeathModel {
 
 	private void setupDeathModel() {
         Reader reader;
-        if(Properties.get().main.implementation == SiloModel.Implementation.MUNICH) {
+        if(Properties.get().main.implementation == Implementation.MUNICH) {
             reader = new InputStreamReader(this.getClass().getResourceAsStream("DeathProbabilityCalcMuc"));
         } else {
             reader = new InputStreamReader(this.getClass().getResourceAsStream("DeathProbabilityCalcMstm"));
@@ -55,9 +55,9 @@ public class DeathModel {
             }
             Household hhOfPersonToDie = per.getHh();
 
-            if (per.getRole() == PersonRole.married) {
+            if (per.getRole() == PersonRole.MARRIED) {
                 Person widow = HouseholdDataManager.findMostLikelyPartner(per, hhOfPersonToDie);
-                widow.setRole(PersonRole.single);
+                widow.setRole(PersonRole.SINGLE);
             }
             hhOfPersonToDie.removePerson(per, dataContainer);
             boolean onlyChildrenLeft = hhOfPersonToDie.checkIfOnlyChildrenRemaining();
@@ -71,7 +71,7 @@ public class DeathModel {
                 }
             }
             Person.removePerson(per.getId());
-            EventManager.countEvent(EventTypes.checkDeath);
+            EventManager.countEvent(EventTypes.CHECK_DEATH);
             householdDataManager.addHouseholdThatChanged(hhOfPersonToDie);
             if (perId == SiloUtil.trackPp || hhOfPersonToDie.getId() == SiloUtil.trackHh)
                 SiloUtil.trackWriter.println("We regret to inform that person " + perId + " from household " + hhOfPersonToDie.getId() +
