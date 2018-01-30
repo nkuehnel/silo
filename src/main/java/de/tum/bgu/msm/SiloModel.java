@@ -109,7 +109,7 @@ public class SiloModel {
 
 	private void setupTimeTracker() {
 		trackTime = Properties.get().main.trackTime;
-		timeCounter = new long[EventTypes.values().length + 12][Properties.get().main.endYear + 1];
+		timeCounter = new long[EventTypes.values().length + 13][Properties.get().main.endYear + 1];
 		startTime = 0;
 		IssueCounter.logIssues(dataContainer.getGeoData());
 	}
@@ -296,6 +296,13 @@ public class SiloModel {
 			dataContainer.getHouseholdData().clearUpdatedHouseholds();
 			if (trackTime) timeCounter[EventTypes.values().length + 11][year] += System.currentTimeMillis() - startTime;
 
+			//switchToYear(, year)
+
+			if (trackTime) startTime = System.currentTimeMillis();
+			int autonomousSwitchCounter = modelContainer.getSwitchToAutonomousVehicleModel().switchToAV(dataContainer.getHouseholdData().getConventionalCarsHouseholds(), year);
+			dataContainer.getHouseholdData().clearConventionalCarsHouseholds();
+			if (trackTime) timeCounter[EventTypes.values().length + 12][year] += System.currentTimeMillis() - startTime;
+
 			if ( runMatsim || runTravelDemandModel || Properties.get().main.createMstmOutput) {
                 if (SiloUtil.containsElement(tdmYears, year + 1)) {
                 transportModel.runTransportModel(year + 1);
@@ -307,7 +314,7 @@ public class SiloModel {
 			modelContainer.getPrm().updatedRealEstatePrices(year, dataContainer);
 			if (trackTime) timeCounter[EventTypes.values().length + 8][year] += System.currentTimeMillis() - startTime;
 
-			EventManager.logEvents(carChangeCounter);
+			EventManager.logEvents(carChangeCounter, autonomousSwitchCounter);
 			IssueCounter.logIssues(dataContainer.getGeoData());           // log any issues that arose during this simulation period
 
 			logger.info("  Finished this simulation period with " + dataContainer.getHouseholdData().getNumberOfPersons() +

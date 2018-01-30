@@ -7,6 +7,7 @@ import org.apache.log4j.Logger;
 
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.Map;
 
 /**
  * Created by matthewokrah on 12/12/2017.
@@ -21,26 +22,26 @@ public class SwitchToAutonomousVehicleModel {
         calculator = new SwitchToAutonomousVehicleJSCalculator(reader);
     }
 
-/*
-    public void run() {
-        for (Household hh : Household.getHouseholdArray()) {
-            simulateCarOwnership(hh);
+
+    public int switchToAV(Map<Integer, int[]> conventionalCarsHouseholds, int year) {
+
+        int counter = 0;
+        for (Map.Entry<Integer, int[]> pair : conventionalCarsHouseholds.entrySet()) {
+            Household hh = Household.getHouseholdFromId(pair.getKey());
+            if (hh != null) {
+                int income = hh.getHhIncome()/12 ; //uses monthly income
+
+                double[] prob = calculator.calculate(income, year);
+
+                int action = SiloUtil.select(prob);
+
+                if (action == 1){
+                    hh.setAutonomous(hh.getAutonomous() + 1);
+                    counter++;
+                }
+            }
         }
-        SummarizeData.summarizeCarOwnershipByMunicipality(zonalData);
+        return counter;
     }
 
-    public void simulateCarOwnership(Household hh) {
-        // simulate number of autos for household hh
-        // Note: This method can only be executed after all households have been generated and allocated to zones,
-        // as distance to transit and areaType is dependent on where households are living
-        int license = hh.getHHLicenseHolders();
-        int workers = hh.getNumberOfWorkers();
-        int income = hh.getHhIncome()/12;  // convert yearly into monthly income
-        // add 1 to the value of distance to transit before taking log to avoid situations of log 0
-        double logDistanceToTransit = Math.log(zonalData.getIndexedValueAt(hh.getHomeZone(), "distanceToTransit") + 1);
-        int areaType = (int) zonalData.getIndexedValueAt(hh.getHomeZone(), "BBSR");
-
-        double[] prob = calculator.calculate(license, workers, income, logDistanceToTransit, areaType);
-        hh.setAutos(SiloUtil.select(prob));
-    }*/
 }

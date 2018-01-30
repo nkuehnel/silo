@@ -183,7 +183,7 @@ public class EventManager {
     }
 
 
-    public static void logEvents(int [] carChangeCounter) {
+    public static void logEvents(int [] carChangeCounter, int autonomousSwitchCounter) {
         // log number of events to screen and result file
 
         float pp = Person.getPersonCount();
@@ -240,6 +240,11 @@ public class EventManager {
         logger.info("  Simulated household relinquished a car" + carChangeCounter[1] + " (" +
                 SiloUtil.rounder((100f * carChangeCounter[1] / hh), 0) + "% of hh)");
         SummarizeData.resultFile("RelinquishedCar,"+carChangeCounter[1]);
+
+        logger.info("  Simulated household switching to AV" + autonomousSwitchCounter + " (" +
+                SiloUtil.rounder((100f * autonomousSwitchCounter / hh), 0) + "% of hh)");
+        SummarizeData.resultFile("SwitchedToAV,"+autonomousSwitchCounter);
+
         int inmigration = eventCounter.get(EventTypes.inmigration);
         logger.info("  Simulated inmigrated hh:     " + inmigration + " (" +
                 SiloUtil.rounder((100f * inmigration / hh), 0) + "% of hh)");

@@ -103,6 +103,10 @@ public class MunichCarOwnerShipModel implements CarOwnershipModel {
                     if (hh.getAutos() > 0){ //cannot have less than zero cars
                         hh.setAutos(hh.getAutos() - 1);
                         counter[1]++;
+                        // update number of AVs, if necessary after household relinquishes a car
+                        if (hh.getAutonomous() > hh.getAutos()){  //no. of AVs cannot exceed total no. of autos
+                            hh.setAutonomous(hh.getAutos());
+                        }
                     }
                 }
             }

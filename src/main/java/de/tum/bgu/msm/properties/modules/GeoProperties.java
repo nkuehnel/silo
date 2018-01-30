@@ -16,7 +16,7 @@ public class GeoProperties {
     public final String developmentRestrictionsFile;
     public final boolean useCapacityForDwellings;
     public final String transitAccessTime;
-    public final String zonalAttributesFile;
+    //public final String zonalAttributesFile;
     public final String capacityFile;
 
     public GeoProperties(ResourceBundle bundle, SiloModel.Implementation implementation) {
@@ -29,11 +29,6 @@ public class GeoProperties {
         developmentRestrictionsFile = ResourceUtil.getProperty(bundle, "development.restrictions");
         useCapacityForDwellings = ResourceUtil.getBooleanProperty(bundle, "use.growth.capacity.data", false);
         capacityFile = ResourceUtil.getProperty(bundle, "growth.capacity.file");
-        if(implementation == SiloModel.Implementation.MUNICH) {
-            zonalAttributesFile = ResourceUtil.getProperty(bundle, "raster.cells.definition");
-        } else {
-            zonalAttributesFile = null;
-        }
         transitAccessTime = ResourceUtil.getProperty(bundle, "transit.access.time");
     }
 }

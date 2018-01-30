@@ -4,6 +4,7 @@ import com.pb.common.datafile.TableDataSet;
 import com.pb.common.matrix.Matrix;
 import de.tum.bgu.msm.SiloUtil;
 import de.tum.bgu.msm.data.*;
+import de.tum.bgu.msm.data.munich.GeoDataMuc;
 import de.tum.bgu.msm.properties.PropertiesSynPop;
 import de.tum.bgu.msm.syntheticPopulationGenerator.CreateCarOwnershipModel;
 import de.tum.bgu.msm.syntheticPopulationGenerator.SyntheticPopI;
@@ -3691,7 +3692,9 @@ public class SyntheticPopDe implements SyntheticPopI {
     private void addCars() {
         //method to estimate the number of cars per household
         //it must be run after generating the population
-        CreateCarOwnershipModel createCarOwnershipModel = new CreateCarOwnershipModel();
+        GeoDataMuc geoDataMuc = new GeoDataMuc();
+        geoDataMuc.setInitialData();
+        CreateCarOwnershipModel createCarOwnershipModel = new CreateCarOwnershipModel(geoDataMuc);
         createCarOwnershipModel.run();
     }
 

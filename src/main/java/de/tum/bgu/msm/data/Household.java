@@ -44,6 +44,8 @@ public final class Household {
     private HouseholdType type;
     private final List<Person> persons;
 
+    private int autonomous = 0;
+
     public Household(int id, int dwellingID, int homeZone, int autos) {
         this.hhId = id;
         this.dwellingId = dwellingID;
@@ -263,5 +265,13 @@ public final class Household {
            }
         }
         return true;
+    }
+
+    public void setAutonomous (int autonomous) {
+        this.autonomous = autonomous;
+    }
+
+    public int getAutonomous() {
+        return autonomous;
     }
 }

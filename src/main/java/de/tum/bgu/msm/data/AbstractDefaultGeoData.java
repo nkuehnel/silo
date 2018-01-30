@@ -1,9 +1,11 @@
 package de.tum.bgu.msm.data;
 
 import com.pb.common.datafile.TableDataSet;
+import com.pb.common.matrix.Matrix;
 import de.tum.bgu.msm.SiloUtil;
 import de.tum.bgu.msm.container.SiloDataContainer;
 import de.tum.bgu.msm.properties.Properties;
+import omx.OmxFile;
 import org.apache.log4j.Logger;
 
 import java.io.PrintWriter;
@@ -249,4 +251,14 @@ public abstract class AbstractDefaultGeoData implements GeoData {
         }
         return (developmentRestrictions.getIndexedValueAt(zone, col) == 1);
     }
+
+    public float getDistanceToTransitOfZone(int zone) {
+        return zonalData.getIndexedValueAt(zone, "distanceToTransit");
+    }
+
+    public int getAreaTypeOfZone(int zone) {
+        return (int) zonalData.getIndexedValueAt(zone, "BBSR");
+    }
+
+
 }

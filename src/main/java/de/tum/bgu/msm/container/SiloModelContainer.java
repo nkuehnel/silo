@@ -4,8 +4,10 @@ import de.tum.bgu.msm.SiloModel;
 import de.tum.bgu.msm.autoOwnership.CarOwnershipModel;
 import de.tum.bgu.msm.autoOwnership.maryland.MaryLandCarOwnershipModel;
 import de.tum.bgu.msm.autoOwnership.munich.MunichCarOwnerShipModel;
+import de.tum.bgu.msm.autoOwnership.munich.SwitchToAutonomousVehicleModel;
 import de.tum.bgu.msm.data.Accessibility;
 import de.tum.bgu.msm.data.maryland.GeoDataMstm;
+import de.tum.bgu.msm.data.munich.GeoDataMuc;
 import de.tum.bgu.msm.demography.*;
 import de.tum.bgu.msm.jobmography.UpdateJobs;
 import de.tum.bgu.msm.properties.Properties;
@@ -48,6 +50,7 @@ public class SiloModelContainer {
     private final CarOwnershipModel carOwnershipModel;
     private final UpdateJobs updateJobs;
     private final CreateCarOwnershipModel createCarOwnershipModel;
+    private final SwitchToAutonomousVehicleModel switchToAutonomousVehicleModel;
 
     /**
      *
@@ -73,13 +76,15 @@ public class SiloModelContainer {
      * @param carOwnershipModel
      * @param updateJobs
      * @param createCarOwnershipModel
+     * @param switchToAutonomousVehicleModel
      */
     private SiloModelContainer(InOutMigration iomig, ConstructionModel cons,
                                ConstructionOverwrite ddOverwrite, RenovationModel renov, DemolitionModel demol,
                                PricingModel prm, BirthModel birth, DeathModel death, MarryDivorceModel mardiv,
                                LeaveParentHhModel lph, MovesModelI move, ChangeEmploymentModel changeEmployment,
                                ChangeSchoolUnivModel changeSchoolUniv, ChangeDriversLicense changeDriversLicense,
-                               Accessibility acc, CarOwnershipModel carOwnershipModel, UpdateJobs updateJobs, CreateCarOwnershipModel createCarOwnershipModel) {
+                               Accessibility acc, CarOwnershipModel carOwnershipModel, UpdateJobs updateJobs,
+                               CreateCarOwnershipModel createCarOwnershipModel, SwitchToAutonomousVehicleModel switchToAutonomousVehicleModel) {
         this.iomig = iomig;
         this.cons = cons;
         this.ddOverwrite = ddOverwrite;
@@ -98,6 +103,7 @@ public class SiloModelContainer {
         this.carOwnershipModel = carOwnershipModel;
         this.updateJobs = updateJobs;
         this.createCarOwnershipModel = createCarOwnershipModel;
+        this.switchToAutonomousVehicleModel = switchToAutonomousVehicleModel;
     }
 
     /**
@@ -128,15 +134,17 @@ public class SiloModelContainer {
 
         CarOwnershipModel carOwnershipModel;
         CreateCarOwnershipModel createCarOwnershipModel = null;
+        SwitchToAutonomousVehicleModel switchToAutonomousVehicleModel = null;
         switch(Properties.get().main.implementation) {
             case MARYLAND:
                 move = new MovesModelMstm((GeoDataMstm)dataContainer.getGeoData(), dataContainer.getRealEstateData());
                 carOwnershipModel = new MaryLandCarOwnershipModel(dataContainer.getJobData(), acc);
                 break;
             case MUNICH:
-                createCarOwnershipModel = new CreateCarOwnershipModel();
+                createCarOwnershipModel = new CreateCarOwnershipModel((GeoDataMuc)dataContainer.getGeoData());
                 carOwnershipModel = new MunichCarOwnerShipModel();
                 move = new MovesModelMuc(dataContainer.getGeoData());
+                switchToAutonomousVehicleModel = new SwitchToAutonomousVehicleModel();
                 break;
             default:
                 throw new RuntimeException("Models not defined for implementation " + Properties.get().main.implementation);
@@ -144,7 +152,7 @@ public class SiloModelContainer {
 
         return new SiloModelContainer(iomig, cons, ddOverwrite, renov, demol,
                 prm, birth, death, mardiv, lph, move, changeEmployment, changeSchoolUniv, changeDriversLicense, acc,
-                carOwnershipModel, updateJobs, createCarOwnershipModel);
+                carOwnershipModel, updateJobs, createCarOwnershipModel, switchToAutonomousVehicleModel);
     }
 
 
@@ -223,4 +231,13 @@ public class SiloModelContainer {
             throw new NullPointerException("Create car ownership model not available. Check implementation!");
         }
     }
+
+    public SwitchToAutonomousVehicleModel getSwitchToAutonomousVehicleModel(){
+        if(switchToAutonomousVehicleModel != null) {
+            return switchToAutonomousVehicleModel;
+        } else {
+            throw new NullPointerException("Switch to autonomous vehicle model not available. Check implementation!");
+        }
+    }
+
 }

@@ -13,7 +13,7 @@ public class SwitchToAutonomousVehicleJSCalculator extends JavaScriptCalculator<
         super(reader);
     }
 
-    public double[] calculate(int income, double ratio) {
-        return super.calculate("calculateSwitchToAutonomousVehicleProbabilities", income, ratio);
+    public double[] calculate(int income, int year) {
+        return super.calculate("calculateSwitchToAutonomousVehicleProbabilities", income, year);
     }
 }

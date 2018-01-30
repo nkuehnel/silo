@@ -1,13 +1,27 @@
-var calculateSwitchToAutonomousVehicleProbabilities = function(ratio, income) {
+var calculateSwitchToAutonomousVehicleProbabilities = function(income, year) {
 
     intercept = 2.5;
     betaRatio = -3.5;
     betaIncome = 0.00035;
 
+    if (year < 2020){
+        ratio = 4.0;
+    } else if (year < 2025){
+        ratio = 3.5;
+    } else if (year < 2030){
+        ratio = 3.0;
+    } else if (year < 2035){
+        ratio = 2.5;
+    } else if (year < 2040){
+        ratio = 2.0;
+    } else {
+        ratio = 1.5;
+    }
+
     results = new Array(2);
     utility = intercept + (betaRatio * ratio) + (betaIncome * income);
     result = Math.exp(utility);
-    results[0] = result / (1.0 + result);
+    results[0] = 1 / (1.0 + result);
     results[1] = 1 - results[0];
 
     return Java.to(results, "double[]");
