@@ -52,10 +52,10 @@ public class SyntheticPopDe implements SyntheticPopI {
 
         logger.info("Running Module: Allocation");
         new Allocation(dataSetSynPop).run();
-
+/*
         logger.info("Running Module: Car ownership");
         new CreateCarOwnershipModel().run();
-
+*/
         logger.info("Summary of the synthetic population");
         SummarizeData.writeOutSyntheticPopulationDE(Properties.get().main.implementation.BASE_YEAR);
 
