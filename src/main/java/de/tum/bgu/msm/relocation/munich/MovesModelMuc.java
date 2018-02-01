@@ -167,7 +167,7 @@ public class MovesModelMuc extends AbstractDefaultMovesModel {
                     if (geoData.getRegionOfZone(workZone) == regions[i]){
                         workDistanceFactor[i] = workDistanceFactor[i] * 25;
                     } else {
-                        int smallestDistInMin = (int) siloModelContainer.getAcc().getMinDistanceFromZoneToRegion(workZone, regions[i]);
+                        int smallestDistInMin = (int) siloModelContainer.getAcc().getMinTravelTimeFromZoneToRegion(workZone, regions[i]);
                         workDistanceFactor[i] = workDistanceFactor[i] * siloModelContainer.getAcc().getWorkTLFD(smallestDistInMin);
                     }
                 }

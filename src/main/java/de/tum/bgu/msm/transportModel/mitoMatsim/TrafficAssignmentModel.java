@@ -5,7 +5,7 @@ import de.tum.bgu.msm.SiloModel;
 import de.tum.bgu.msm.container.SiloModelContainer;
 import de.tum.bgu.msm.data.Accessibility;
 import de.tum.bgu.msm.data.MitoHousehold;
-import de.tum.bgu.msm.data.Zone;
+import de.tum.bgu.msm.data.MitoZone;
 import de.tum.bgu.msm.data.travelTimes.TravelTimes;
 import de.tum.bgu.msm.properties.Properties;
 import org.matsim.api.core.v01.TransportMode;
@@ -35,7 +35,7 @@ public class TrafficAssignmentModel {
     private TrafficAssignmentUtil trafficAssignmentUtil;
     private Config matsimConfig;
     private MutableScenario matsimScenario;
-    private Map<Integer, Zone> zones;
+    private Map<Integer, MitoZone> zones;
     private double scalingFactor;
     private SiloModelContainer modelContainer;
 
@@ -60,11 +60,11 @@ public class TrafficAssignmentModel {
         configMatsim(numberOfIterations, numberOfThreads);
     }
 
-    public void feedDataToMatsim(Map<Integer, Zone> zones, Map<Integer, MitoHousehold> mitoHouseholds, Accessibility acc, int year){
+    public void feedDataToMatsim(Map<Integer, MitoZone> zones, Map<Integer, MitoHousehold> mitoHouseholds, Accessibility acc, int year){
         String networkFile = trafficAssignmentDirectory + Properties.get().transportModel.matsimNetworkFile;
         matsimConfig.network().setInputFile(networkFile);
         matsimScenario = (MutableScenario) ScenarioUtils.loadScenario(matsimConfig);
-        matsimConfig.controler().setOutputDirectory(trafficAssignmentDirectory + "output/" + year);
+        matsimConfig.controler().setOutputDirectory( Properties.get().main.baseDirectory + "scenOutput/" + Properties.get().main.scenarioName+ "/matsim/" + year);
         matsimConfig.controler().setRunId("mitoMatsim" + year);
         Population matsimPopulation = populationFromMito.createPopulationFromMito(mitoHouseholds, acc, zones, year);
         matsimScenario.setPopulation(matsimPopulation);
@@ -103,9 +103,10 @@ public class TrafficAssignmentModel {
         transitModes.add("pt");
         matsimConfig.transit().setTransitModes(transitModes);
 
-        matsimConfig.transit().setTransitScheduleFile(trafficAssignmentDirectory + Properties.get().transportModel.matsimScheduleFile);
-        matsimConfig.transit().setVehiclesFile(trafficAssignmentDirectory + Properties.get().transportModel.matsimVehicleFile);
-
+        if (Properties.get().transportModel.runTransitInMatsim) {
+            matsimConfig.transit().setTransitScheduleFile(trafficAssignmentDirectory + Properties.get().transportModel.matsimScheduleFile);
+            matsimConfig.transit().setVehiclesFile(trafficAssignmentDirectory + Properties.get().transportModel.matsimVehicleFile);
+        }
 
 
         matsimConfig.controler().setFirstIteration(1);

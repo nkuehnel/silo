@@ -5,7 +5,7 @@ import de.tum.bgu.msm.SiloUtil;
 import de.tum.bgu.msm.data.Accessibility;
 import de.tum.bgu.msm.data.MitoHousehold;
 import de.tum.bgu.msm.data.MitoPerson;
-import de.tum.bgu.msm.data.Zone;
+import de.tum.bgu.msm.data.MitoZone;
 import de.tum.bgu.msm.data.travelTimes.TravelTimes;
 import de.tum.bgu.msm.properties.Properties;
 import org.apache.log4j.Logger;
@@ -43,7 +43,7 @@ public class PopulationFromMito {
 
         tempModeChoice = new TempModeChoice();
         tempTimeOfDay = new TempTimeOfDay();
-        useTransit = Properties.get().transportModel.runMatsimAfterMito;
+        useTransit = Properties.get().transportModel.runTransitInMatsim;
 
     }
 
@@ -58,7 +58,7 @@ public class PopulationFromMito {
 
     }
 
-    public Population createPopulationFromMito(Map<Integer, MitoHousehold> households, Accessibility acc, Map<Integer, Zone> zones, int year){
+    public Population createPopulationFromMito(Map<Integer, MitoHousehold> households, Accessibility acc, Map<Integer, MitoZone> zones, int year){
 
         logger.info("starting conversion of MITO households to MATSim hbw trips");
 
@@ -121,7 +121,7 @@ public class PopulationFromMito {
         if (writePopulation){
             new File(trafficAssignmentDirectory + "output/").mkdir();
             MatsimWriter popWriter = new PopulationWriter(matsimPopulation, matsimNetwork);
-            popWriter.write(trafficAssignmentDirectory + "output/population" + year  + ".xml");
+            popWriter.write("scenOutput/" + Properties.get().main.scenarioName + "/matsim/population" + year  + ".xml");
 
         }
 
@@ -140,7 +140,7 @@ public class PopulationFromMito {
         matsimPlan.addActivity(activity1);
 
         matsimPlan.addLeg(matsimPopulationFactory.createLeg(mode));
-        time += tempTimeOfDay.selectWorkDuration() + acc.getAutoTravelTime(homeZone, workZone);
+        time += tempTimeOfDay.selectWorkDuration() + acc.getPeakAutoTravelTime(homeZone, workZone);
 
         Coord workCoord = trafficAssignmentUtil.getRandomZoneCoordinates(workZone);
         Activity activity2 = matsimPopulationFactory.createActivityFromCoord("work", workCoord);

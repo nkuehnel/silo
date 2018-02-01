@@ -39,10 +39,10 @@ public final class MitoTransportModel implements TransportModelI {
 
 
     public MitoTransportModel(ResourceBundle rb, String baseDirectory, GeoData geoData, SiloModelContainer modelContainer) {
-        this.mito = MitoModel.standAloneModel(rb, Implementation.valueOf(Properties.get().main.implementation.name()));
+        //this.mito = MitoModel.standAloneModel(rb, Implementation.valueOf(Properties.get().main.implementation.name()));
         this.geoData = geoData;
         this.modelContainer = modelContainer;
-        mito.setRandomNumberGenerator(SiloUtil.getRandomObject());
+        //mito.setRandomNumberGenerator(SiloUtil.getRandomObject());
         setBaseDirectory(baseDirectory);
 
         runMatsimAfterMito = Properties.get().transportModel.runMatsimAfterMito;
@@ -57,11 +57,11 @@ public final class MitoTransportModel implements TransportModelI {
 
     @Override
     public void runTransportModel(int year) {
-    	MitoModel.setScenarioName (Properties.get().main.scenarioName);
+    	//MitoModel.setScenarioName (Properties.get().main.scenarioName);
     	updateData(year);
-		logger.info("  Update MITO data for the year " + year);
-    	//MitoModel.setScenarioName (SiloUtil.scenarioName);
-    	updateData(year);
+    	logger.info("  Update MITO data for the year " + year);
+
+
     	logger.info("  Running travel demand model MITO for the year " + year);
         //mito.runModel();
         logger.info("  Running traffic assignment for the year " + year);
@@ -73,7 +73,7 @@ public final class MitoTransportModel implements TransportModelI {
         logger.info("travel times by car updated to year " + year);
     }
     
-    private void updateData() {
+    private void updateData(int year) {
     	Map<Integer, MitoZone> zones = new HashMap<>();
 		for (int i = 0; i < geoData.getZones().length; i++) {
 			AreaType areaType = AreaType.RURAL; //TODO: put real area type in here
@@ -107,6 +107,6 @@ public final class MitoTransportModel implements TransportModelI {
     }
 
     private void setBaseDirectory (String baseDirectory) {
-        mito.setBaseDirectory(baseDirectory);
+        //mito.setBaseDirectory(baseDirectory);
     }
 }

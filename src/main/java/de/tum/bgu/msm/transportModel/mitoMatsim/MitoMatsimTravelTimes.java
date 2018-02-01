@@ -1,6 +1,6 @@
 package de.tum.bgu.msm.transportModel.mitoMatsim;
 
-import de.tum.bgu.msm.data.Zone;
+import de.tum.bgu.msm.data.MitoZone;
 import de.tum.bgu.msm.data.travelTimes.TravelTimes;
 import de.tum.bgu.msm.transportModel.matsim.MatsimTravelTimes;
 import de.tum.bgu.msm.transportModel.matsim.SiloMatsimUtils;
@@ -33,7 +33,7 @@ public class MitoMatsimTravelTimes implements TravelTimes {
     private final Map<Id<Node>, Map<Id<Node>, LeastCostPathTree.NodeData>> treesForNode = new HashMap<>();
     private TrafficAssignmentUtil trafficAssignmentUtil;
 
-    public MitoMatsimTravelTimes(LeastCostPathTree leastCoastPathTree, Network network, TrafficAssignmentUtil trafficAssignmentUtil, Map<Integer, Zone> zones) {
+    public MitoMatsimTravelTimes(LeastCostPathTree leastCoastPathTree, Network network, TrafficAssignmentUtil trafficAssignmentUtil, Map<Integer, MitoZone> zones) {
         this.leastCoastPathTree = leastCoastPathTree;
 
         NetworkCleaner nc = new NetworkCleaner();
@@ -45,7 +45,7 @@ public class MitoMatsimTravelTimes implements TravelTimes {
         initialize(zones);
     }
 
-    private void initialize(Map<Integer, Zone> zones) {
+    private void initialize(Map<Integer, MitoZone> zones) {
         for (int zoneId : zones.keySet()) {
 
             for (int i = 0; i < NUMBER_OF_CALC_POINTS; i++) { // Several points in a given origin zone
@@ -63,7 +63,7 @@ public class MitoMatsimTravelTimes implements TravelTimes {
     }
 
     @Override
-    public double getTravelTime(int origin, int destination) {
+    public double getTravelTime(int origin, int destination, double timeOfDay) {
         logger.trace("There are " + zoneCalculationNodesMap.keySet().size() + " origin zones.");
         double sumTravelTime_min = 0.;
 
@@ -72,7 +72,7 @@ public class MitoMatsimTravelTimes implements TravelTimes {
             if(treesForNode.containsKey(originNode.getId())) {
                 tree = treesForNode.get(originNode.getId());
             } else {
-                leastCoastPathTree.calculate(network, originNode, TIME_OF_DAY);
+                leastCoastPathTree.calculate(network, originNode, timeOfDay);
                 tree = leastCoastPathTree.getTree();
                 treesForNode.put(originNode.getId(), tree);
             }
