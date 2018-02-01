@@ -255,7 +255,8 @@ public class MovesModelMuc extends AbstractDefaultMovesModel {
 
 
         // Step 2: select vacant dwelling in selected region
-        int[] vacantDwellings = RealEstateDataManager.getListOfVacantDwellingsInRegion(regions[selectedRegion]);
+        //todo ?
+        int[] vacantDwellings = RealEstateDataManager.getListOfVacantDwellingsInRegion(selectedRegion);
         double[] expProbs = SiloUtil.createArrayWithValue(vacantDwellings.length, 0d);
         double sumProbs = 0.;
         int maxNumberOfDwellings = Math.min(20, vacantDwellings.length);  // No household will evaluate more than 20 dwellings
