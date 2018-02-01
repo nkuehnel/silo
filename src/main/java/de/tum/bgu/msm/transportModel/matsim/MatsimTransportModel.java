@@ -18,9 +18,10 @@
  * *********************************************************************** */
 package de.tum.bgu.msm.transportModel.matsim;
 
-import de.tum.bgu.msm.SiloUtil;
+import de.tum.bgu.msm.Implementation;
+import de.tum.bgu.msm.container.SiloDataContainer;
 import de.tum.bgu.msm.data.Accessibility;
-import de.tum.bgu.msm.data.HouseholdDataManager;
+import de.tum.bgu.msm.data.munich.GeoDataMuc;
 import de.tum.bgu.msm.properties.Properties;
 import de.tum.bgu.msm.transportModel.TransportModelI;
 import org.apache.log4j.Logger;
@@ -54,14 +55,14 @@ public class MatsimTransportModel implements TransportModelI {
 	
 	private static final Random random = MatsimRandom.getLocalInstance(); // Make sure that stream of random variables is reproducible. kai, apr'16
 
-	private final HouseholdDataManager householdData;
+	private final SiloDataContainer dataContainer;
 	private final Accessibility acc;
 	private final Config initialMatsimConfig;
 
 
-	public MatsimTransportModel(HouseholdDataManager householdData, Accessibility acc, Config matsimConfig) {
-		Gbl.assertNotNull(householdData);
-		this.householdData = householdData;
+	public MatsimTransportModel(SiloDataContainer dataContainer, Accessibility acc, Config matsimConfig) {
+		Gbl.assertNotNull(dataContainer);
+		this.dataContainer = dataContainer;
 		this.acc = acc;
 		this.initialMatsimConfig = matsimConfig;
 	}
@@ -100,7 +101,7 @@ public class MatsimTransportModel implements TransportModelI {
 		String matsimRunId = scenarioName + "_" + year;
 		
 		Config config = SiloMatsimUtils.createMatsimConfig(initialMatsimConfig, matsimRunId, populationScalingFactor, workerScalingFactor);
-		Population population = SiloMatsimUtils.createMatsimPopulation(config, householdData, year, zoneFeatureMap,
+		Population population = SiloMatsimUtils.createMatsimPopulation(config, dataContainer.getHouseholdData(), year, zoneFeatureMap,
 				populationScalingFactor * workerScalingFactor);
 		
 		if (writePopulation) {
@@ -132,5 +133,10 @@ public class MatsimTransportModel implements TransportModelI {
 //		MatsimPtTravelTimes matsimPtTravelTimes = new MatsimPtTravelTimes(controler.getTripRouterProvider().get(), zoneFeatureMap, scenario.getNetwork());
 		acc.addTravelTimeForMode(TransportMode.car, matsimTravelTimes);
 //		acc.addTravelTimeForMode(TransportMode.pt, matsimTravelTimes); // use car times for now also, as pt travel times are too slow to compute, Nico Oct 17
+		
+		if (config.transit().isUseTransit() && Properties.get().main.implementation == Implementation.MUNICH) {
+			MatsimPTDistances matsimPTDistances = new MatsimPTDistances(config, scenario, (GeoDataMuc) dataContainer.getGeoData());
+			acc.setPTDistances(matsimPTDistances);
+		}
 	}
 }

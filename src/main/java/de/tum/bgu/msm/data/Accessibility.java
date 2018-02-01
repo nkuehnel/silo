@@ -6,6 +6,7 @@ import de.tum.bgu.msm.SiloUtil;
 import de.tum.bgu.msm.data.travelTimes.MatrixTravelTimes;
 import de.tum.bgu.msm.data.travelTimes.TravelTimes;
 import de.tum.bgu.msm.properties.Properties;
+import de.tum.bgu.msm.transportModel.matsim.MatsimPTDistances;
 import omx.OmxFile;
 import omx.OmxMatrix;
 import org.apache.log4j.Logger;
@@ -32,6 +33,8 @@ public class Accessibility {
     private float autoOperatingCosts;
     private Matrix travelTimeToRegion;
 	private final Map<String, TravelTimes> travelTimes = new LinkedHashMap<>();
+	private PTDistances ptDistances;
+	private static final double TIME_OF_DAY = 8*60.*60.;
 
     public Accessibility(GeoData geoData) {
         this.geoData = geoData;
@@ -40,7 +43,7 @@ public class Accessibility {
 
 	public void initialize() {
         readWorkTripLengthFrequencyDistribution();
-        calculateDistanceToRegions();
+        calculateTravelTimesToRegions();
 	}
 
     public void readCarSkim(int year) {
@@ -113,16 +116,17 @@ public class Accessibility {
     }
     
 
-    public float getAutoTravelTime(int i, int j) {
-    	return (float) travelTimes.get(TransportMode.car).getTravelTime(i, j);
+    public float getPeakAutoTravelTime(int i, int j) {
+    	return (float) travelTimes.get(TransportMode.car).getTravelTime(i, j, TIME_OF_DAY);
     }
 
-    public float getTransitTravelTime(int i, int j) {
-    	return (float) travelTimes.get(TransportMode.pt).getTravelTime(i, j);
+    public float getPeakTransitTravelTime(int i, int j) {
+    	return (float) travelTimes.get(TransportMode.pt).getTravelTime(i, j, TIME_OF_DAY);
     }
 
-    public float getTravelCosts(int i, int j) {
-        return (autoOperatingCosts / 100f) * getAutoTravelTime(i, j);
+    public float getPeakTravelCosts(int i, int j) {
+        return (autoOperatingCosts / 100f) * getPeakAutoTravelTime(i, j); // Take costs provided by MATSim here? Should be possible
+        // without much alterations as they are part of NodeData, which is contained in MATSimTravelTimes, nk/dz, jan'18
     }
 
     public void calculateAccessibilities (int year) {
@@ -147,15 +151,15 @@ public class Accessibility {
             transitAccessibility[geoData.getZoneIndex(orig)] = 0;
             for (int dest: zones) {
                 double autoImpedance;
-                double autoTravelTime = getAutoTravelTime(orig, dest);
+                double autoTravelTime = getPeakAutoTravelTime(orig, dest);
                 if (autoTravelTime <= 0) {      // should never happen for auto
                     autoImpedance = 0;
                 } else {
                     autoImpedance = Math.exp(betaAuto * autoTravelTime);
                 }
                 double transitImpedance;
-                double transitTravelTime = getTransitTravelTime(orig, dest);
-                if (transitTravelTime <= 0) {   // zone is not connected by walk-to-transit (Nan is -1)
+                double transitTravelTime = getPeakTransitTravelTime(orig, dest);
+                if (transitTravelTime <= 0) {   // zone is not connected by walk-to-transit
                     transitImpedance = 0;
                 } else {
                     transitImpedance = Math.exp(betaTransit * transitTravelTime);
@@ -227,8 +231,7 @@ at de.tum.bgu.msm.data.Accessibility.calculateAccessibilities(Accessibility.java
     }
 
 
-    private void calculateDistanceToRegions () {
-        // calculate the minimal distance from each zone to every region
+    private void calculateTravelTimesToRegions() {
         travelTimeToRegion = new Matrix(geoData.getZones().length, geoData.getRegionList().length);
         travelTimeToRegion.setExternalNumbersZeroBased(geoData.getZones(), geoData.getRegionList());
         for (int iz: geoData.getZones()) {
@@ -236,7 +239,7 @@ at de.tum.bgu.msm.data.Accessibility.calculateAccessibilities(Accessibility.java
             for (int i = 0; i < minDist.length; i++) minDist[i] = Float.MAX_VALUE;
             for (int jz: geoData.getZones()) {
                 int region = geoData.getRegionOfZone(jz);
-                float travelTime = getAutoTravelTime(iz, jz);
+                float travelTime = getPeakAutoTravelTime(iz, jz);
                 minDist[region] = Math.min(minDist[region], travelTime);
             }
             for (int region: geoData.getRegionList()) travelTimeToRegion.setValueAt(iz, region, minDist[region]);
@@ -265,7 +268,7 @@ at de.tum.bgu.msm.data.Accessibility.calculateAccessibilities(Accessibility.java
     }
 
 
-    public float getMinDistanceFromZoneToRegion (int zone, int region) {
+    public float getMinTravelTimeFromZoneToRegion(int zone, int region) {
         return travelTimeToRegion.getValueAt(zone, region);
     }
 
@@ -287,4 +290,13 @@ at de.tum.bgu.msm.data.Accessibility.calculateAccessibilities(Accessibility.java
 		}
 		this.travelTimes.put(mode, travelTimes);
 	}
+
+
+	public void setPTDistances(PTDistances ptDistances) {
+		this.ptDistances = ptDistances;
+	}
+
+	public PTDistances getPtDistances() {
+        return this.ptDistances;
+    }
 }

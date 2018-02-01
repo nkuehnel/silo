@@ -2,14 +2,14 @@ package de.tum.bgu.msm.data;
 
 import com.pb.common.datafile.TableDataSet;
 import com.pb.common.util.ResourceUtil;
+import de.tum.bgu.msm.SiloUtil;
 import de.tum.bgu.msm.container.SiloDataContainer;
 import de.tum.bgu.msm.container.SiloModelContainer;
-import de.tum.bgu.msm.SiloUtil;
 import de.tum.bgu.msm.data.maryland.GeoDataMstm;
 import de.tum.bgu.msm.properties.Properties;
 import org.apache.log4j.Logger;
 
-import java.io.*;
+import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.ResourceBundle;
 
@@ -49,7 +49,7 @@ public class SummarizeData {
         SiloUtil.createDirectoryIfNotExistingYet(directory);
         String resultFileName = rb.getString(PROPERTIES_RESULT_FILE_NAME);
         resultWriter = SiloUtil.openFileForSequentialWriting(directory + "/" + resultFileName +
-                Properties.get().main.gregorianIterator + ".csv", Properties.get().main.startYear != SiloUtil.getBaseYear());
+                Properties.get().main.gregorianIterator + ".csv", Properties.get().main.startYear != Properties.get().main.implementation.BASE_YEAR);
         resultWriterFinal = SiloUtil.openFileForSequentialWriting(directory + "/" + resultFileName + "_" + Properties.get().main.endYear + ".csv", false);
     }
 
@@ -93,7 +93,7 @@ public class SummarizeData {
                 SiloUtil.createDirectoryIfNotExistingYet(directory);
                 String resultFileName = Properties.get().main.spatialResultFileName;
                 spatialResultWriter = SiloUtil.openFileForSequentialWriting(directory + "/" + resultFileName +
-                        Properties.get().main.gregorianIterator + ".csv", Properties.get().main.startYear != SiloUtil.getBaseYear());
+                        Properties.get().main.gregorianIterator + ".csv", Properties.get().main.startYear != Properties.get().main.implementation.BASE_YEAR);
                 spatialResultWriterFinal = SiloUtil.openFileForSequentialWriting(directory + "/" + resultFileName +"_"+ Properties.get().main.endYear + ".csv", false);
                 break;
             case "close":
@@ -121,7 +121,7 @@ public class SummarizeData {
         int[] hhs = new int[dataContainer.getGeoData().getHighestZonalId() + 1];
         int[][] hhInc = new int[Properties.get().main.incomeBrackets.length + 1][dataContainer.getGeoData().getHighestZonalId() + 1];
         int[] pop = getPopulationByZone(dataContainer.getGeoData());
-        for (Household hh: Household.getHouseholdArray()) {
+        for (Household hh: Household.getHouseholds()) {
             int zone = Dwelling.getDwellingFromId(hh.getDwellingId()).getZone();
             int incGroup = HouseholdDataManager.getIncomeCategoryForIncome(hh.getHhIncome());
             hhInc[incGroup - 1][zone]++;
@@ -166,7 +166,7 @@ public class SummarizeData {
         // summarize population by zone
 
         int[] pp = new int[geoData.getHighestZonalId() + 1];
-        for (Household hh: Household.getHouseholdArray()) {
+        for (Household hh: Household.getHouseholds()) {
             int zone = Dwelling.getDwellingFromId(hh.getDwellingId()).getZone();
             pp[zone] += hh.getHhSize();
         }
@@ -178,7 +178,7 @@ public class SummarizeData {
         // summarize households by zone
 
         int[] householdsByZone = new int[geoData.getZones().length];
-        for (Household hh: Household.getHouseholdArray()) {
+        for (Household hh: Household.getHouseholds()) {
             int zone = Dwelling.getDwellingFromId(hh.getDwellingId()).getZone();
             householdsByZone[geoData.getZoneIndex(zone)]++;
         }
@@ -250,7 +250,7 @@ public class SummarizeData {
                         for (Person pp: hh.getPersons()) {
                             pwp.print(pp.getId());
                             pwp.print(",");
-                            pwp.print(pp.getHhId());
+                            pwp.print(pp.getHh().getId());
                             pwp.print(",");
                             pwp.print(pp.getAge());
                             pwp.print(",");
@@ -311,7 +311,7 @@ public class SummarizeData {
                             for (Person pp: hh.getPersons()) {
                                 pwp.print(pp.getId());
                                 pwp.print(",");
-                                pwp.print(pp.getHhId());
+                                pwp.print(pp.getHh().getId());
                                 pwp.print(",");
                                 pwp.print(pp.getAge());
                                 pwp.print(",");
@@ -376,11 +376,10 @@ public class SummarizeData {
                 year + ".csv";
         PrintWriter pwh = SiloUtil.openFileForSequentialWriting(filehh, false);
         pwh.println("id,dwelling,zone,hhSize,autos");
-        Household[] hhs = Household.getHouseholdArray();
-        for (Household hh : hhs) {
+        for (Household hh : Household.getHouseholds()) {
             if (hh.getId() == SiloUtil.trackHh) {
                 SiloUtil.trackingFile("Writing hh " + hh.getId() + " to micro data file.");
-                hh.logAttributes(SiloUtil.trackWriter);
+                SiloUtil.trackWriter.println(hh.toString());
             }
             pwh.print(hh.getId());
             pwh.print(",");
@@ -399,17 +398,17 @@ public class SummarizeData {
                 year + ".csv";
         PrintWriter pwp = SiloUtil.openFileForSequentialWriting(filepp, false);
         pwp.println("id,hhID,age,gender,relationShip,race,occupation,driversLicense,workplace,income");
-        Person[] pps = Person.getPersonArray();
-        for (Person pp : pps) {
+        for (Person pp : Person.getPersons()) {
             pwp.print(pp.getId());
             pwp.print(",");
-            pwp.print(pp.getHhId());
+            pwp.print(pp.getHh().getId());
             pwp.print(",");
             pwp.print(pp.getAge());
             pwp.print(",");
             pwp.print(pp.getGender());
             pwp.print(",\"");
-            pwp.print(pp.getRole());
+            String role = pp.getRole().toString();
+            pwp.print(role);
             pwp.print("\",\"");
             pwp.print(pp.getRace());
             pwp.print("\",");
@@ -420,7 +419,7 @@ public class SummarizeData {
             pwp.println(pp.getIncome());
             if (pp.getId() == SiloUtil.trackPp) {
                 SiloUtil.trackingFile("Writing pp " + pp.getId() + " to micro data file.");
-                pp.logAttributes(SiloUtil.trackWriter);
+                SiloUtil.trackWriter.println(pp.toString());
             }
         }
         pwp.close();
@@ -451,7 +450,7 @@ public class SummarizeData {
             pwd.println(dd.getYearBuilt());
             if (dd.getId() == SiloUtil.trackDd) {
                 SiloUtil.trackingFile("Writing dd " + dd.getId() + " to micro data file.");
-                dd.logAttributes(SiloUtil.trackWriter);
+                SiloUtil.trackWriter.println(dd.toString());
             }
         }
         pwd.close();
@@ -493,7 +492,7 @@ public class SummarizeData {
             pwj.println("\"");
             if (jj.getId() == SiloUtil.trackJj) {
                 SiloUtil.trackingFile("Writing jj " + jj.getId() + " to micro data file.");
-                jj.logAttributes(SiloUtil.trackWriter);
+                SiloUtil.trackWriter.println(jj.toString());
             }
         }
         pwj.close();
@@ -515,11 +514,10 @@ public class SummarizeData {
                 year + ".csv";
         PrintWriter pwh = SiloUtil.openFileForSequentialWriting(filehh, false);
         pwh.println("id,dwelling,zone,hhSize,autos");
-        Household[] hhs = Household.getHouseholdArray();
-        for (Household hh : hhs) {
+        for (Household hh : Household.getHouseholds()) {
             if (hh.getId() == SiloUtil.trackHh) {
                 SiloUtil.trackingFile("Writing hh " + hh.getId() + " to micro data file.");
-                hh.logAttributes(SiloUtil.trackWriter);
+                SiloUtil.trackWriter.println(hh.toString());
             }
             pwh.print(hh.getId());
             pwh.print(",");
@@ -538,18 +536,17 @@ public class SummarizeData {
         String filepp = Properties.get().main.baseDirectory + Properties.get().householdData.personFileName + "_" +
                 year + ".csv";
         PrintWriter pwp = SiloUtil.openFileForSequentialWriting(filepp, false);
-        pwp.println("id,hhid,age,gender,relationShip,race,occupation,workplace,income,nationality,education,homeZone,workZone,driversLicense,schoolDE");
-        Person[] pps = Person.getPersonArray();
-        for (Person pp : pps) {
+        pwp.println("id,hhid,age,gender,relationShip,race,occupation,workplace,income,nationality,education,homeZone,workZone,driversLicense,schoolDE,schoolTAZ");
+        for (Person pp : Person.getPersons()) {
             pwp.print(pp.getId());
             pwp.print(",");
-            pwp.print(pp.getHhId());
+            pwp.print(pp.getHh().getId());
             pwp.print(",");
             pwp.print(pp.getAge());
             pwp.print(",");
             pwp.print(pp.getGender());
             pwp.print(",\"");
-            pwp.print(pp.getRole());
+            pwp.print(pp.getRole().toString());
             pwp.print("\",\"");
             pwp.print(pp.getRace());
             pwp.print("\",");
@@ -569,10 +566,12 @@ public class SummarizeData {
             pwp.print(",");
             pwp.print(pp.hasDriverLicense());
             pwp.print(",");
-            pwp.println(pp.getSchoolType());
+            pwp.print(pp.getSchoolType());
+            pwp.print(",");
+            pwp.println(pp.getSchoolPlace());
             if (pp.getId() == SiloUtil.trackPp) {
                 SiloUtil.trackingFile("Writing pp " + pp.getId() + " to micro data file.");
-                pp.logAttributes(SiloUtil.trackWriter);
+                SiloUtil.trackWriter.println(pp.toString());
             }
         }
         pwp.close();
@@ -608,10 +607,16 @@ public class SummarizeData {
             pwd.print(",");
             pwd.print(dd.getYearConstructionDE());
             pwd.print(",");
-            pwd.println(dd.getUsage());
+            int use = 1;
+            if (dd.getUsage().equals(Dwelling.Usage.RENTED)){
+                use = 2;
+            } else if (dd.getUsage().equals(Dwelling.Usage.VACANT)){
+                use = 3;
+            }
+            pwd.println(use);
             if (dd.getId() == SiloUtil.trackDd) {
                 SiloUtil.trackingFile("Writing dd " + dd.getId() + " to micro data file.");
-                dd.logAttributes(SiloUtil.trackWriter);
+                SiloUtil.trackWriter.println(dd.toString());
             }
         }
         pwd.close();
@@ -631,7 +636,7 @@ public class SummarizeData {
             pwj.println(jj.getType());
             if (jj.getId() == SiloUtil.trackJj) {
                 SiloUtil.trackingFile("Writing jj " + jj.getId() + " to micro data file.");
-                jj.logAttributes(SiloUtil.trackWriter);
+                SiloUtil.trackWriter.println(jj.toString());
             }
         }
         pwj.close();
@@ -657,11 +662,10 @@ public class SummarizeData {
                 year + ".csv";
         PrintWriter pwh = SiloUtil.openFileForSequentialWriting(filehh, false);
         pwh.println("id,dwelling,zone,hhSize,autos");
-        Household[] hhs = Household.getHouseholdArray();
-        for (Household hh : hhs) {
+        for (Household hh : Household.getHouseholds()) {
             if (hh.getId() == SiloUtil.trackHh) {
                 SiloUtil.trackingFile("Writing hh " + hh.getId() + " to micro data file.");
-                hh.logAttributes(SiloUtil.trackWriter);
+                SiloUtil.trackWriter.println(hh.toString());
             }
             pwh.print(hh.getId());
             pwh.print(",");
@@ -681,17 +685,16 @@ public class SummarizeData {
                 year + ".csv";
         PrintWriter pwp = SiloUtil.openFileForSequentialWriting(filepp, false);
         pwp.println("id,hhid,age,gender,relationShip,race,occupation,workplace,income,nationality,education,homeZone,workZone,driversLicense,schoolDE,schoolplace,autos,trips");
-        Person[] pps = Person.getPersonArray();
-        for (Person pp : pps) {
+        for (Person pp : Person.getPersons()) {
             pwp.print(pp.getId());
             pwp.print(",");
-            pwp.print(pp.getHhId());
+            pwp.print(pp.getHh().getId());
             pwp.print(",");
             pwp.print(pp.getAge());
             pwp.print(",");
             pwp.print(pp.getGender());
             pwp.print(",\"");
-            pwp.print(pp.getRole());
+            pwp.print(pp.getRole().toString());
             pwp.print("\",\"");
             pwp.print(pp.getRace());
             pwp.print("\",");
@@ -715,12 +718,12 @@ public class SummarizeData {
             pwp.print(",");
             pwp.print(pp.getSchoolPlace());
             pwp.print(",");
-            pwp.print(Household.getHouseholdFromId(pp.getHhId()).getAutos());
+            pwp.print(pp.getHh().getAutos());
             pwp.print(",");
             pwp.println(pp.getTelework());
             if (pp.getId() == SiloUtil.trackPp) {
                 SiloUtil.trackingFile("Writing pp " + pp.getId() + " to micro data file.");
-                pp.logAttributes(SiloUtil.trackWriter);
+                SiloUtil.trackWriter.println(pp.toString());
             }
         }
         pwp.close();
@@ -759,7 +762,7 @@ public class SummarizeData {
             pwd.println(dd.getUsage());
             if (dd.getId() == SiloUtil.trackDd) {
                 SiloUtil.trackingFile("Writing dd " + dd.getId() + " to micro data file.");
-                dd.logAttributes(SiloUtil.trackWriter);
+                SiloUtil.trackWriter.println(dd.toString());
             }
         }
         pwd.close();
@@ -779,7 +782,7 @@ public class SummarizeData {
             pwj.println(jj.getType());
             if (jj.getId() == SiloUtil.trackJj) {
                 SiloUtil.trackingFile("Writing jj " + jj.getId() + " to micro data file.");
-                jj.logAttributes(SiloUtil.trackWriter);
+                SiloUtil.trackWriter.println(jj.toString());
             }
         }
         pwj.close();
@@ -804,17 +807,15 @@ public class SummarizeData {
         String filehh = Properties.get().main.baseDirectory + Properties.get().householdData.householdFileName + fileEnding;
         PrintWriter pwh = SiloUtil.openFileForSequentialWriting(filehh, false);
         pwh.println("id,dwelling,zone,hhSize,autos");
-        Household[] hhs = Household.getHouseholdArray();
         String filepp = Properties.get().main.baseDirectory + Properties.get().householdData.personFileName + fileEnding;
         PrintWriter pwp = SiloUtil.openFileForSequentialWriting(filepp, false);
         pwp.println("id,hhid,age,gender,relationShip,race,occupation,workplace,income,nationality,education,homeZone,workZone,license,schoolDE");
-        Person[] pps = Person.getPersonArray();
-
-        for (int i = 0; i < hhs.length; i = i + step) {
-            Household hh = hhs[i];
+        Household[] households = Household.getHouseholds().toArray(new Household[Household.getHouseholds().size()]);
+        for (int i = 0; i < households.length; i = i + step) {
+            Household hh = households[i];
             if (hh.getId() == SiloUtil.trackHh) {
                 SiloUtil.trackingFile("Writing hh " + hh.getId() + " to micro data file.");
-                hh.logAttributes(SiloUtil.trackWriter);
+                SiloUtil.trackWriter.println(hh.toString());
             }
             pwh.print(hh.getId());
             pwh.print(",");
@@ -825,17 +826,16 @@ public class SummarizeData {
             pwh.print(hh.getHhSize());
             pwh.print(",");
             pwh.println(hh.getAutos());
-            for (int j = 0; j < hh.getHhSize(); j++){
-                Person pp = hh.getPersons()[j];
+            for (Person pp: hh.getPersons()){
                 pwp.print(pp.getId());
                 pwp.print(",");
-                pwp.print(pp.getHhId());
+                pwp.print(pp.getHh().getId());
                 pwp.print(",");
                 pwp.print(pp.getAge());
                 pwp.print(",");
                 pwp.print(pp.getGender());
                 pwp.print(",\"");
-                pwp.print(pp.getRole());
+                pwp.print(pp.getRole().toString());
                 pwp.print("\",\"");
                 pwp.print(pp.getRace());
                 pwp.print("\",");
@@ -858,7 +858,7 @@ public class SummarizeData {
                 pwp.println(pp.getSchoolType());
                 if (pp.getId() == SiloUtil.trackPp) {
                     SiloUtil.trackingFile("Writing pp " + pp.getId() + " to micro data file.");
-                    pp.logAttributes(SiloUtil.trackWriter);
+                    SiloUtil.trackWriter.println(pp.toString());
                 }
             }
         }
@@ -899,7 +899,7 @@ public class SummarizeData {
             pwd.println(dd.getUsage());
             if (dd.getId() == SiloUtil.trackDd) {
                 SiloUtil.trackingFile("Writing dd " + dd.getId() + " to micro data file.");
-                dd.logAttributes(SiloUtil.trackWriter);
+                SiloUtil.trackWriter.println(dd.toString());
             }
         }
         pwd.close();
@@ -918,7 +918,7 @@ public class SummarizeData {
             pwj.println(jj.getType());
             if (jj.getId() == SiloUtil.trackJj) {
                 SiloUtil.trackingFile("Writing jj " + jj.getId() + " to micro data file.");
-                jj.logAttributes(SiloUtil.trackWriter);
+                SiloUtil.trackWriter.println(jj);
             }
         }
         pwj.close();
@@ -930,7 +930,7 @@ public class SummarizeData {
         PrintWriter pwa = SiloUtil.openFileForSequentialWriting("autoOwnershipA.csv", false);
         pwa.println("hhSize,workers,income,transit,density,autos");
         int[][] autos = new int[4][60000];
-        for (Household hh: Household.getHouseholdArray()) {
+        for (Household hh: Household.getHouseholds()) {
             int autoOwnership = hh.getAutos();
             int zone = hh.getHomeZone();
             int county = geoData.getCountyOfZone(zone);
@@ -976,14 +976,14 @@ public class SummarizeData {
 
         String fileName = (Properties.get().main.baseDirectory + "scenOutput/" + Properties.get().main.scenarioName + "/" +
                 Properties.get().main.prestoSummaryFile + Properties.get().main.gregorianIterator + ".csv");
-        PrintWriter pw = SiloUtil.openFileForSequentialWriting(fileName, year != SiloUtil.getBaseYear());
+        PrintWriter pw = SiloUtil.openFileForSequentialWriting(fileName, year != Properties.get().main.implementation.BASE_YEAR);
         pw.println(year + ",Housing costs by income group");
         pw.print("Income");
         for (int i = 0; i < 10; i++) pw.print(",rent_" + ((i + 1) * 250));
         pw.println(",averageRent");
         int[][] rentByIncome = new int[10][10];
         int[] rents = new int[10];
-        for (Household hh: Household.getHouseholdArray()) {
+        for (Household hh: Household.getHouseholds()) {
             if (prestoRegionByTaz[hh.getHomeZone()] > 0) {
                 int hhInc = hh.getHhIncome();
                 int rent = Dwelling.getDwellingFromId(hh.getDwellingId()).getPrice();
@@ -1013,11 +1013,10 @@ public class SummarizeData {
                 year + ".csv";
         PrintWriter pwh = SiloUtil.openFileForSequentialWriting(filehh, false);
         pwh.println("id,dwelling,zone,hhSize,autos");
-        Household[] hhs = Household.getHouseholdArray();
-        for (Household hh : hhs) {
+        for (Household hh : Household.getHouseholds()) {
             if (hh.getId() == SiloUtil.trackHh) {
                 SiloUtil.trackingFile("Writing hh " + hh.getId() + " to micro data file.");
-                hh.logAttributes(SiloUtil.trackWriter);
+                SiloUtil.trackWriter.println(hh.toString());
             }
             pwh.print(hh.getId());
             pwh.print(",");
@@ -1036,17 +1035,16 @@ public class SummarizeData {
                 year + ".csv";
         PrintWriter pwp = SiloUtil.openFileForSequentialWriting(filepp, false);
         pwp.println("id,hhID,age,gender,relationShip,race,occupation,driversLicense,workplace,income");
-        Person[] pps = Person.getPersonArray();
-        for (Person pp : pps) {
+        for (Person pp : Person.getPersons()) {
             pwp.print(pp.getId());
             pwp.print(",");
-            pwp.print(pp.getHhId());
+            pwp.print(pp.getHh().getId());
             pwp.print(",");
             pwp.print(pp.getAge());
             pwp.print(",");
             pwp.print(pp.getGender());
             pwp.print(",\"");
-            pwp.print(pp.getRole());
+            pwp.print(pp.getRole().toString());
             pwp.print("\",\"");
             pwp.print(pp.getRace());
             pwp.print("\",");
@@ -1057,7 +1055,7 @@ public class SummarizeData {
             pwp.println(pp.getIncome());
             if (pp.getId() == SiloUtil.trackPp) {
                 SiloUtil.trackingFile("Writing pp " + pp.getId() + " to micro data file.");
-                pp.logAttributes(SiloUtil.trackWriter);
+                SiloUtil.trackWriter.println(pp.toString());
             }
         }
         pwp.close();
@@ -1077,7 +1075,7 @@ public class SummarizeData {
         PrintWriter pwa = SiloUtil.openFileForSequentialWriting("microData/interimFiles/carOwnershipByHh.csv", false);
         pwa.println("license,workers,income,logDistanceToTransit,areaType,autos");
         int[][] autos = new int[4][10000000];
-        for (Household hh: Household.getHouseholdArray()) {
+        for (Household hh: Household.getHouseholds()) {
             int autoOwnership = hh.getAutos();
             int zone = hh.getHomeZone();
             int municipality = (int) zonalData.getIndexedValueAt(zone, "ID_city");
@@ -1098,8 +1096,7 @@ public class SummarizeData {
         }
         pw.close();
 
-        logger.info("Summarized auto ownership and quit.");
-        //System.exit(0);
+        logger.info("Summarized initial auto ownership");
 
     }
 }

@@ -1,12 +1,11 @@
 package de.tum.bgu.msm.utils.concurrent;
 
-import de.tum.bgu.msm.SiloModel;
+import de.tum.bgu.msm.Implementation;
 import de.tum.bgu.msm.SiloUtil;
+import de.tum.bgu.msm.util.concurrent.ConcurrentFunctionExecutor;
+import de.tum.bgu.msm.util.concurrent.RandomizableConcurrentFunction;
 import org.junit.Assert;
 import org.junit.Test;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class ThreadSafeRandomsTest {
 
@@ -16,7 +15,7 @@ public class ThreadSafeRandomsTest {
 
     @Test
     public void test() {
-        SiloUtil.siloInitialization("./test/scenarios/annapolis/javaFiles/siloMstm.properties", SiloModel.Implementation.MARYLAND);
+        SiloUtil.siloInitialization("./test/scenarios/annapolis/javaFiles/siloMstm.properties", Implementation.MARYLAND);
 
         ConcurrentFunctionExecutor executor = new ConcurrentFunctionExecutor();
         for(int i= 0; i<5; i++) {
@@ -30,6 +29,7 @@ public class ThreadSafeRandomsTest {
         final int id;
 
         TestFunction(int id) {
+            super(SiloUtil.getRandomObject().nextLong());
             this.id = id;
         }
 

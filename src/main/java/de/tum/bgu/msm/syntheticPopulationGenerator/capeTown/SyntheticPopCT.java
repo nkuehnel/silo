@@ -2,22 +2,22 @@ package de.tum.bgu.msm.syntheticPopulationGenerator.capeTown;
 
 import com.pb.common.datafile.TableDataSet;
 import com.pb.common.matrix.Matrix;
-
-import java.io.*;
-import java.util.*;
-import java.util.stream.IntStream;
-
 import com.pb.common.util.ResourceUtil;
 import de.tum.bgu.msm.SiloUtil;
 import de.tum.bgu.msm.data.*;
+import de.tum.bgu.msm.properties.Properties;
 import de.tum.bgu.msm.syntheticPopulationGenerator.CreateCarOwnershipModel;
 import de.tum.bgu.msm.syntheticPopulationGenerator.SyntheticPopI;
-import de.tum.bgu.msm.utils.concurrent.ConcurrentFunctionExecutor;
+import de.tum.bgu.msm.util.concurrent.ConcurrentFunctionExecutor;
 import org.apache.commons.math.MathException;
 import org.apache.commons.math.distribution.GammaDistributionImpl;
 import org.apache.commons.math.stat.Frequency;
 import org.apache.commons.math3.distribution.EnumeratedIntegerDistribution;
 import org.apache.log4j.Logger;
+
+import java.io.*;
+import java.util.*;
+import java.util.stream.IntStream;
 
 public class SyntheticPopCT implements SyntheticPopI {
 
@@ -1595,7 +1595,7 @@ public class SyntheticPopCT implements SyntheticPopI {
         //Read the synthetic population
 
         logger.info("   Starting to read the synthetic population");
-        String fileEnding = "_" + SiloUtil.getBaseYear() + ".csv";
+        String fileEnding = "_" + Properties.get().main.implementation.BASE_YEAR + ".csv";
         TableDataSet households = SiloUtil.readCSVfile2(rb.getString(PROPERTIES_HOUSEHOLD_SYN_POP) + fileEnding);
         TableDataSet persons = SiloUtil.readCSVfile2(rb.getString(PROPERTIES_PERSON_SYN_POP) + fileEnding);
         TableDataSet dwellings = SiloUtil.readCSVfile2(rb.getString(PROPERTIES_DWELLING_SYN_POP) + fileEnding);
@@ -1609,7 +1609,7 @@ public class SyntheticPopCT implements SyntheticPopI {
         logger.info("   Starting to generate households");
         for (int i = 1; i <= households.getRowCount(); i++) {
             Household hh = new Household((int) households.getValueAt(i, "id"), (int) households.getValueAt(i, "dwelling"),
-                    (int) households.getValueAt(i, "zone"), (int) households.getValueAt(i, "hhSize"),
+                    (int) households.getValueAt(i, "zone"),
                     (int) households.getValueAt(i, "autos"));
         }
 
@@ -1618,15 +1618,15 @@ public class SyntheticPopCT implements SyntheticPopI {
             Race race = Race.white;
             if ((int) persons.getValueAt(i,"nationality") > 1){race = Race.black;}
             int hhID = (int) persons.getValueAt(i, "hhid");
-            Person pp = new Person((int) persons.getValueAt(i, "id"),hhID ,
+            Person pp = new Person((int) persons.getValueAt(i, "id"),
                     (int) persons.getValueAt(i, "age"), (int) persons.getValueAt(i, "gender"),
                     race, (int) persons.getValueAt(i, "occupation"), (int) persons.getValueAt(i, "workplace"),
                     (int) persons.getValueAt(i, "income"));
-            Household.getHouseholdFromId(hhID).addPersonForInitialSetup(pp);
+            Household.getHouseholdFromId(hhID).addPerson(pp);
             pp.setEducationLevel((int) persons.getValueAt(i, "education"));
-            if (persons.getStringValueAt(i, "relationShip").equals("single")) pp.setRole(PersonRole.single);
-            else if (persons.getStringValueAt(i, "relationShip").equals("married")) pp.setRole(PersonRole.married);
-            else pp.setRole(PersonRole.child);
+            if (persons.getStringValueAt(i, "relationShip").equals("single")) pp.setRole(PersonRole.SINGLE);
+            else if (persons.getStringValueAt(i, "relationShip").equals("married")) pp.setRole(PersonRole.MARRIED);
+            else pp.setRole(PersonRole.CHILD);
             if (persons.getValueAt(i,"driversLicense") == 1) pp.setDriverLicense(true);
             int nationality = (int) persons.getValueAt(i,"nationality");
             if (nationality == 1) {
@@ -1662,7 +1662,7 @@ public class SyntheticPopCT implements SyntheticPopI {
             dd.setFloorSpace((int)dwellings.getValueAt(i,"floor"));
             dd.setBuildingSize((int)dwellings.getValueAt(i,"building"));
             dd.setYearConstructionDE((int)dwellings.getValueAt(i,"year"));
-            dd.setUsage((int)dwellings.getValueAt(i,"usage"));
+            dd.setUsage(Dwelling.Usage.valueOf((int)dwellings.getValueAt(i,"usage")));
         }
         logger.info("   Generated households, persons and dwellings");
 
@@ -1875,7 +1875,7 @@ public class SyntheticPopCT implements SyntheticPopI {
                 int householdSize = (int) microDataHousehold.getIndexedValueAt(hhIdMD, "hhSize");
                 id = HouseholdDataManager.getNextHouseholdId();
                 int newDdId = RealEstateDataManager.getNextDwellingId();
-                Household household = new Household(id, newDdId, tazID, householdSize, 0); //(int id, int dwellingID, int homeZone, int hhSize, int autos)
+                Household household = new Household(id, newDdId, tazID, 0); //(int id, int dwellingID, int homeZone, int hhSize, int autos)
                 hhTotal++;
                 counterMunicipality = updateCountersHousehold(household, counterMunicipality, municipality);
 
@@ -1894,14 +1894,14 @@ public class SyntheticPopCT implements SyntheticPopI {
                     } catch (MathException e) {
                         e.printStackTrace();
                     }
-                    Person pers = new Person(idPerson, id, age, gender, Race.white, occupation, 0, income); //(int id, int hhid, int age, int gender, Race race, int occupation, int workplace, int income)
-                    household.addPersonForInitialSetup(pers);
+                    Person pers = new Person(idPerson, age, gender, Race.white, occupation, 0, income); //(int id, int hhid, int age, int gender, Race race, int occupation, int workplace, int income)
+                    household.addPerson(pers);
                     pers.setEducationLevel((int) microDataPerson.getValueAt(personCounter, "educationLevel"));
-                    PersonRole role = PersonRole.single; //default value = single
+                    PersonRole role = PersonRole.SINGLE; //default value = single
                     if (microDataPerson.getValueAt(personCounter, "personRole") == 2) { //is married
-                        role = PersonRole.married;
+                        role = PersonRole.MARRIED;
                     } else if (microDataPerson.getValueAt(personCounter, "personRole") == 3) { //is children
-                        role = PersonRole.child;
+                        role = PersonRole.CHILD;
                     }
                     pers.setRole(role);
                     int nationality = (int) microDataPerson.getValueAt(personCounter,"nationality");
@@ -1942,7 +1942,7 @@ public class SyntheticPopCT implements SyntheticPopI {
                 year = selectDwellingYear(year); //convert from year class to actual 4-digit year
                 Dwelling dwell = new Dwelling(newDdId, tazID, id, type , bedRooms, quality, price, 0, year); //newDwellingId, raster cell, HH Id, ddType, bedRooms, quality, price, restriction, construction year
                 dwell.setFloorSpace(floorSpace);
-                dwell.setUsage(usage);
+                dwell.setUsage(Dwelling.Usage.valueOf(usage));
                 dwell.setBuildingSize(buildingSize);
                 counterMunicipality = updateCountersDwelling(dwell,counterMunicipality,municipality,yearBracketsDwelling,sizeBracketsDwelling);
             }
@@ -2037,7 +2037,7 @@ public class SyntheticPopCT implements SyntheticPopI {
                 int year = selectVacantDwellingYear(buildingSizeAndYearBuilt[1]);
                 int floorSpaceDwelling = selectFloorSpace(vacantFloor, sizeBracketsDwelling);
                 Dwelling dwell = new Dwelling(newDdId, ddCell[0], -1, DwellingType.MF234, bedRooms, quality, price, 0, year); //newDwellingId, raster cell, HH Id, ddType, bedRooms, quality, price, restriction, construction year
-                dwell.setUsage(3); //vacant dwelling = 3; and hhID is equal to -1
+                dwell.setUsage(Dwelling.Usage.VACANT); //vacant dwelling = 3; and hhID is equal to -1
                 dwell.setFloorSpace(floorSpaceDwelling);
                 dwell.setBuildingSize(buildingSizeAndYearBuilt[0]);
                 vacantCounter++;
@@ -2643,7 +2643,7 @@ public class SyntheticPopCT implements SyntheticPopI {
 
     public static TableDataSet updateCountersDwelling (Dwelling dwelling, TableDataSet attributesCount,int mun, int[] yearBrackets, int[] sizeBrackets){
         /* method to update the counters with the characteristics of the generated dwelling*/
-        if (dwelling.getUsage() == 1){
+        if (dwelling.getUsage() == Dwelling.Usage.OWNED){
             attributesCount.setIndexedValueAt(mun,"ownDwellings",attributesCount.getIndexedValueAt(mun,"ownDwellings") + 1);
         } else {
             attributesCount.setIndexedValueAt(mun,"rentedDwellings",attributesCount.getIndexedValueAt(mun,"rentedDwellings") + 1);
@@ -3030,8 +3030,8 @@ public class SyntheticPopCT implements SyntheticPopI {
     private void addCars(boolean flagSkipCreationOfSPforDebugging) {
         //method to estimate the number of cars per household
         //it must be run after generating the population
-        CreateCarOwnershipModel createCarOwnershipModel = new CreateCarOwnershipModel(rb);
-        createCarOwnershipModel.run(flagSkipCreationOfSPforDebugging);
+        CreateCarOwnershipModel createCarOwnershipModel = new CreateCarOwnershipModel();
+        createCarOwnershipModel.run( );
     }
 
 

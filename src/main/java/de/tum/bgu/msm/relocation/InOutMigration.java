@@ -1,22 +1,23 @@
 package de.tum.bgu.msm.relocation;
 
+import com.pb.common.datafile.TableDataSet;
+import de.tum.bgu.msm.Implementation;
 import de.tum.bgu.msm.SiloUtil;
 import de.tum.bgu.msm.container.SiloDataContainer;
 import de.tum.bgu.msm.container.SiloModelContainer;
-import de.tum.bgu.msm.data.*;
+import de.tum.bgu.msm.data.Household;
+import de.tum.bgu.msm.data.HouseholdDataManager;
+import de.tum.bgu.msm.data.Person;
+import de.tum.bgu.msm.data.Race;
+import de.tum.bgu.msm.events.EventManager;
+import de.tum.bgu.msm.events.EventRules;
+import de.tum.bgu.msm.events.EventTypes;
 import de.tum.bgu.msm.events.IssueCounter;
 import de.tum.bgu.msm.properties.Properties;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.ResourceBundle;
-
-import de.tum.bgu.msm.events.EventRules;
-import de.tum.bgu.msm.events.EventTypes;
-import de.tum.bgu.msm.events.EventManager;
-import com.pb.common.util.ResourceUtil;
-import com.pb.common.datafile.TableDataSet;
 
 /**
  * Adds exogenously given inmigrating and outmigrating households
@@ -56,7 +57,7 @@ public class InOutMigration {
 
 
     public void setupInOutMigration(int year) {
-        // prepare data for inmigration and outmigration
+        // prepare data for INMIGRATION and outmigration
     	//TODO METHOD ONLY HANDLES INMIGRATION. SHOULD IT ALSO HANDLE OUTMIGRATION
         if (!EventRules.ruleInmigrate() && !EventRules.ruleOutmigrate()) return;
         logger.info("  Selecting outmigrants and creating inmigrants for the year " + year);
@@ -72,14 +73,16 @@ public class InOutMigration {
                 outmigrants = currentPopulation - target;
             }
         }
-        Household[] hhs = Household.getHouseholdArray();
+        Household[] hhs = Household.getHouseholds().toArray(new Household[Household.getHouseholds().size()]);
         ArrayList<Integer> selectedOutmigrationHh = new ArrayList<>();
         int createdOutMigrants = 0;
-        if (outmigrants > 0) do {
-            int selected = (int) (hhs.length * SiloUtil.getRandomNumberAsDouble());
-            selectedOutmigrationHh.add(hhs[selected].getId());
-            createdOutMigrants += hhs[selected].getHhSize();
-        } while (createdOutMigrants < outmigrants);
+        if (outmigrants > 0) {
+            do {
+                int selected = (int) (hhs.length * SiloUtil.getRandomNumberAsDouble());
+                selectedOutmigrationHh.add(hhs[selected].getId());
+                createdOutMigrants += hhs[selected].getHhSize();
+            } while (createdOutMigrants < outmigrants);
+        }
         outMigratingHhId = SiloUtil.convertIntegerArrayListToArray(selectedOutmigrationHh);
 
         // create inmigrants
@@ -142,14 +145,14 @@ public class InOutMigration {
             k += 6;
         }
 
-        Household hh = new Household(hhId, -1, -1, hhSize, 0);
+        Household hh = new Household(hhId, -1, -1, 0);
         k = 0;
         for (int i = 1; i <= hhSize; i++) {
             Race ppRace = Race.values()[imData[3 + k]];
-            Person per = new Person(HouseholdDataManager.getNextPersonId(), hhId, imData[1 + k], imData[2 + k],
+            Person per = new Person(HouseholdDataManager.getNextPersonId(), imData[1 + k], imData[2 + k],
                     ppRace, imData[4 + k], -1, imData[5 + k]);
+            hh.addPerson(per);
             k += 6;
-            hh.addPersonForInitialSetup(per);
         }
         // Searching for employment has to be in a separate loop from setting up all persons, as finding a job will change the household income and household type, which can only be calculated after all persons are set up.
         for (Person per: hh.getPersons()) {
@@ -157,9 +160,13 @@ public class InOutMigration {
                 boolean success = modelContainer.getChangeEmployment().findNewJob(per.getId(), modelContainer);
                 if (!success) per.setOccupation(2);
             }
+            if (per.getAge() > 17){
+               boolean license = modelContainer.getChangeDriversLicense().createDriversLicense(per.getId());
+               if (license) per.setDriverLicense(true);
+            }
         }
         hh.setType();
-        hh.setHouseholdRace();
+        hh.determineHouseholdRace();
         HouseholdDataManager.findMarriedCouple(hh);
         HouseholdDataManager.defineUnmarriedPersons(hh);
         int newDdId = modelContainer.getMove().searchForNewDwelling(hh.getPersons(), modelContainer);
@@ -170,8 +177,11 @@ public class InOutMigration {
             outMigrateHh(hhId, true, dataContainer);
             return;
         }
-        dataContainer.getHouseholdData().addHouseholdThatChanged(hh);
-        EventManager.countEvent(EventTypes.inmigration);
+
+        EventManager.countEvent(EventTypes.INMIGRATION);
+        if(Properties.get().main.implementation == Implementation.MUNICH) {
+            modelContainer.getCreateCarOwnershipModel().simulateCarOwnership(hh); // set initial car ownership of new household
+        }
         inMigrationPPCounter += hh.getHhSize();
         if (hhId == SiloUtil.trackHh) SiloUtil.trackWriter.println("Household " + hhId + " inmigrated.");
         for (Person pp: Household.getHouseholdFromId(hhId).getPersons())
@@ -183,7 +193,7 @@ public class InOutMigration {
         // Household with ID hhId out migrates
         Household hh = Household.getHouseholdFromId(hhId);
         if (!EventRules.ruleOutmigrate(hh) && !overwriteEventRules) return;
-        EventManager.countEvent(EventTypes.outMigration);
+        EventManager.countEvent(EventTypes.OUT_MIGRATION);
         outMigrationPPCounter += hh.getHhSize();
         if (hhId == SiloUtil.trackHh) SiloUtil.trackWriter.println("Household " + hhId + " outmigrated.");
         for (Person pp: hh.getPersons()) {

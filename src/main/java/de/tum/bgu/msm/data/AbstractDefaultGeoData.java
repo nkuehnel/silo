@@ -15,7 +15,7 @@ public abstract class AbstractDefaultGeoData implements GeoData {
 
     private final String zoneIdColumnName;
     private final String regionColumnName;
-    private final String countyColumnName;
+
 
     protected int[] zoneIndex;
     protected int[] zones;
@@ -28,7 +28,6 @@ public abstract class AbstractDefaultGeoData implements GeoData {
     private TableDataSet regDef;
 
     protected int[] countyIndex;
-    protected int[] counties;
 
     private int[] developableLUtypes;
     private TableDataSet landUse;
@@ -37,17 +36,15 @@ public abstract class AbstractDefaultGeoData implements GeoData {
 
     private boolean useCapacityAsNumberOfDwellings;
 
-    public AbstractDefaultGeoData(String zoneIdColumnName, String regionColumnName, String countyColumnName) {
+    public AbstractDefaultGeoData(String zoneIdColumnName, String regionColumnName) {
         this.zoneIdColumnName = zoneIdColumnName;
         this.regionColumnName = regionColumnName;
-        this.countyColumnName = countyColumnName;
     }
 
     @Override
     public void setInitialData () {
         readZones();
         readRegionDefinition();
-        createListOfCountyFIPSCodes();
         readLandUse();
         readDeveloperData();
     }
@@ -178,11 +175,6 @@ public abstract class AbstractDefaultGeoData implements GeoData {
         regDef.buildIndex(regDef.getColumnPosition(zoneIdColumnName));
     }
 
-    private void createListOfCountyFIPSCodes() {
-        counties = SiloUtil.idendifyUniqueValues(zonalData.getColumnAsInt(countyColumnName));
-        countyIndex = SiloUtil.createIndexArray(counties);
-    }
-
     private void readDeveloperData() {
         String baseDirectory = Properties.get().main.baseDirectory;
         int startYear = Properties.get().main.startYear;
@@ -195,7 +187,7 @@ public abstract class AbstractDefaultGeoData implements GeoData {
         useCapacityAsNumberOfDwellings = Properties.get().geo.useCapacityForDwellings;
         if (useCapacityAsNumberOfDwellings) {
             String capacityFileName;
-            if (startYear == SiloUtil.getBaseYear()) {
+            if (startYear == Properties.get().main.implementation.BASE_YEAR) {
                 capacityFileName = baseDirectory + "input/" + Properties.get().geo.capacityFile + ".csv";
             } else {
                 capacityFileName = baseDirectory + "scenOutput/" + Properties.get().main.scenarioName + "/" +
@@ -211,7 +203,7 @@ public abstract class AbstractDefaultGeoData implements GeoData {
         String fileName;
         String baseDirectory = Properties.get().main.baseDirectory;
         int startYear = Properties.get().main.startYear;
-        if (startYear == SiloUtil.getBaseYear()) {  // start in year 2000
+        if (startYear == Properties.get().main.implementation.BASE_YEAR) {  // start in year 2000
             fileName = baseDirectory + "input/" + Properties.get().geo.landUseAreaFile + ".csv";
         } else {                                             // start in different year (continue previous run)
             fileName = baseDirectory + "scenOutput/" + Properties.get().main.scenarioName + "/" +

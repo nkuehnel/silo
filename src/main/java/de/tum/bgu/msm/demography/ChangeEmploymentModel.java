@@ -3,8 +3,8 @@ package de.tum.bgu.msm.demography;
 import de.tum.bgu.msm.SiloUtil;
 import de.tum.bgu.msm.container.SiloModelContainer;
 import de.tum.bgu.msm.data.*;
-import de.tum.bgu.msm.events.EventTypes;
 import de.tum.bgu.msm.events.EventManager;
+import de.tum.bgu.msm.events.EventTypes;
 import de.tum.bgu.msm.events.IssueCounter;
 import org.apache.log4j.Logger;
 
@@ -53,8 +53,8 @@ public class ChangeEmploymentModel {
             int age = Math.min(99, pp.getAge());
             int inc = HouseholdDataManager.selectIncomeForPerson(gender, age, 1);
             pp.setIncome(inc);
-            EventManager.countEvent(EventTypes.findNewJob);
-            householdDataManager.addHouseholdThatChanged(Household.getHouseholdFromId(pp.getHhId()));
+            EventManager.countEvent(EventTypes.FIND_NEW_JOB);
+            householdDataManager.addHouseholdThatChanged(pp.getHh());
             if (perId == SiloUtil.trackPp) SiloUtil.trackWriter.println("Person " + perId + " started working for job " + jj.getId());
             return true;
         }
@@ -67,8 +67,8 @@ public class ChangeEmploymentModel {
         Person pp = Person.getPersonFromId(perId);
         if (pp == null) return;  // person has died or moved away
         pp.quitJob(true, jobDataManager);
-        EventManager.countEvent(EventTypes.quitJob);
-        householdDataManager.addHouseholdThatChanged(Household.getHouseholdFromId(pp.getHhId()));
+        EventManager.countEvent(EventTypes.QUIT_JOB);
+        householdDataManager.addHouseholdThatChanged(pp.getHh());
         if (perId == SiloUtil.trackPp) SiloUtil.trackWriter.println("Person " + perId + " quit her/his job.");
     }
 }

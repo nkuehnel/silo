@@ -1,9 +1,9 @@
 package de.tum.bgu.msm.data;
 
 import de.tum.bgu.msm.SiloUtil;
-import de.tum.bgu.msm.utils.concurrent.RandomizableConcurrentFunction;
+import de.tum.bgu.msm.util.concurrent.RandomizableConcurrentFunction;
 
-public class IncomeAdjustment extends RandomizableConcurrentFunction{
+public class IncomeAdjustment extends RandomizableConcurrentFunction {
 
     private final Person person;
     private final float meanIncomeChange;
@@ -11,6 +11,7 @@ public class IncomeAdjustment extends RandomizableConcurrentFunction{
 
 
     public IncomeAdjustment(Person person, float desiredShift, float meanIncomeChange) {
+        super(SiloUtil.getRandomObject().nextLong());
         this.person = person;
         this.desiredShift = desiredShift;
         this.meanIncomeChange = meanIncomeChange;

@@ -5,7 +5,6 @@ import de.tum.bgu.msm.SiloUtil;
 import de.tum.bgu.msm.container.SiloDataContainer;
 import de.tum.bgu.msm.container.SiloModelContainer;
 import de.tum.bgu.msm.data.*;
-import de.tum.bgu.msm.data.maryland.GeoDataMstm;
 import de.tum.bgu.msm.events.EventManager;
 import de.tum.bgu.msm.events.EventRules;
 import de.tum.bgu.msm.events.EventTypes;
@@ -13,6 +12,7 @@ import de.tum.bgu.msm.properties.Properties;
 import org.apache.log4j.Logger;
 
 import java.io.File;
+import java.util.List;
 
 public abstract class AbstractDefaultMovesModel implements MovesModelI {
 
@@ -58,7 +58,7 @@ public abstract class AbstractDefaultMovesModel implements MovesModelI {
 
 
     @Override
-    public abstract int searchForNewDwelling(Person[] persons, SiloModelContainer modelContainer);
+    public abstract int searchForNewDwelling(List<Person> persons, SiloModelContainer modelContainer);
 
     @Override
     public abstract void calculateRegionalUtilities(SiloModelContainer modelContainer);
@@ -91,7 +91,7 @@ public abstract class AbstractDefaultMovesModel implements MovesModelI {
         int idNewDD = searchForNewDwelling(hh.getPersons(), modelContainer);  // Step 2: Choose new dwelling
         if (idNewDD > 0) {
             moveHousehold(hh, hh.getDwellingId(), idNewDD, dataContainer);    // Step 3: Move household
-            EventManager.countEvent(EventTypes.householdMove);
+            EventManager.countEvent(EventTypes.HOUSEHOLD_MOVE);
             dataContainer.getHouseholdData().addHouseholdThatMoved(hh);
             if (hhId == SiloUtil.trackHh) SiloUtil.trackWriter.println("Household " + hhId + " has moved to dwelling " +
                     Household.getHouseholdFromId(hhId).getDwellingId());
@@ -234,7 +234,7 @@ public abstract class AbstractDefaultMovesModel implements MovesModelI {
         evaluateAllDwellingUtilities(modelContainer);
         averageHousingSatisfaction = new double[HouseholdType.values().length];
         int[] hhCountyByType = new int[HouseholdType.values().length];
-        for (Household hh : Household.getHouseholdArray()) {
+        for (Household hh : Household.getHouseholds()) {
             double util = Dwelling.getDwellingFromId(hh.getDwellingId()).getUtilOfResident();
             int count = hh.getHouseholdType().ordinal();
             averageHousingSatisfaction[count] += util;

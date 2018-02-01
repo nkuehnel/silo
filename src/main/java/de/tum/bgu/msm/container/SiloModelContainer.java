@@ -1,20 +1,20 @@
 package de.tum.bgu.msm.container;
 
 import de.tum.bgu.msm.SiloModel;
-import de.tum.bgu.msm.SiloModel.Implementation;
 import de.tum.bgu.msm.autoOwnership.CarOwnershipModel;
 import de.tum.bgu.msm.autoOwnership.maryland.MaryLandCarOwnershipModel;
-import de.tum.bgu.msm.data.*;
+import de.tum.bgu.msm.autoOwnership.munich.MunichCarOwnerShipModel;
+import de.tum.bgu.msm.data.Accessibility;
 import de.tum.bgu.msm.data.maryland.GeoDataMstm;
 import de.tum.bgu.msm.demography.*;
 import de.tum.bgu.msm.jobmography.UpdateJobs;
 import de.tum.bgu.msm.properties.Properties;
 import de.tum.bgu.msm.realEstate.*;
 import de.tum.bgu.msm.relocation.InOutMigration;
-import de.tum.bgu.msm.relocation.mstm.MovesModelMstm;
 import de.tum.bgu.msm.relocation.MovesModelI;
+import de.tum.bgu.msm.relocation.mstm.MovesModelMstm;
 import de.tum.bgu.msm.relocation.munich.MovesModelMuc;
-import de.tum.bgu.msm.autoOwnership.munich.MunichCarOwnerShipModel;
+import de.tum.bgu.msm.syntheticPopulationGenerator.CreateCarOwnershipModel;
 import org.apache.log4j.Logger;
 
 /**
@@ -47,6 +47,7 @@ public class SiloModelContainer {
     private final Accessibility acc;
     private final CarOwnershipModel carOwnershipModel;
     private final UpdateJobs updateJobs;
+    private final CreateCarOwnershipModel createCarOwnershipModel;
 
     /**
      *
@@ -71,13 +72,14 @@ public class SiloModelContainer {
      * @param acc
      * @param carOwnershipModel
      * @param updateJobs
+     * @param createCarOwnershipModel
      */
     private SiloModelContainer(InOutMigration iomig, ConstructionModel cons,
                                ConstructionOverwrite ddOverwrite, RenovationModel renov, DemolitionModel demol,
                                PricingModel prm, BirthModel birth, DeathModel death, MarryDivorceModel mardiv,
                                LeaveParentHhModel lph, MovesModelI move, ChangeEmploymentModel changeEmployment,
                                ChangeSchoolUnivModel changeSchoolUniv, ChangeDriversLicense changeDriversLicense,
-                               Accessibility acc, CarOwnershipModel carOwnershipModel, UpdateJobs updateJobs) {
+                               Accessibility acc, CarOwnershipModel carOwnershipModel, UpdateJobs updateJobs, CreateCarOwnershipModel createCarOwnershipModel) {
         this.iomig = iomig;
         this.cons = cons;
         this.ddOverwrite = ddOverwrite;
@@ -95,6 +97,7 @@ public class SiloModelContainer {
         this.acc = acc;
         this.carOwnershipModel = carOwnershipModel;
         this.updateJobs = updateJobs;
+        this.createCarOwnershipModel = createCarOwnershipModel;
     }
 
     /**
@@ -115,28 +118,33 @@ public class SiloModelContainer {
         Accessibility acc = new Accessibility(dataContainer.getGeoData());
         //SummarizeData.summarizeAutoOwnershipByCounty(acc, jobData);
         MovesModelI move;
-        if (Properties.get().main.implementation.equals(Implementation.MARYLAND)) {
-            move = new MovesModelMstm((GeoDataMstm)dataContainer.getGeoData(), dataContainer.getRealEstateData());
-        } else {
-            move = new MovesModelMuc(dataContainer.getGeoData());
-        }
         InOutMigration iomig = new InOutMigration();
         ConstructionModel cons = new ConstructionModel(dataContainer.getGeoData());
         RenovationModel renov = new RenovationModel();
         DemolitionModel demol = new DemolitionModel();
         PricingModel prm = new PricingModel();
         UpdateJobs updateJobs = new UpdateJobs();
-        CarOwnershipModel carOwnershipModel;
-        if(Properties.get().main.implementation.equals(Implementation.MARYLAND)) {
-            carOwnershipModel = new MaryLandCarOwnershipModel(dataContainer.getJobData(), acc);
-        }  else {
-            carOwnershipModel = new MunichCarOwnerShipModel();
-        }
         ConstructionOverwrite ddOverwrite = new ConstructionOverwrite();
+
+        CarOwnershipModel carOwnershipModel;
+        CreateCarOwnershipModel createCarOwnershipModel = null;
+        switch(Properties.get().main.implementation) {
+            case MARYLAND:
+                move = new MovesModelMstm((GeoDataMstm)dataContainer.getGeoData(), dataContainer.getRealEstateData());
+                carOwnershipModel = new MaryLandCarOwnershipModel(dataContainer.getJobData(), acc);
+                break;
+            case MUNICH:
+                createCarOwnershipModel = new CreateCarOwnershipModel();
+                carOwnershipModel = new MunichCarOwnerShipModel();
+                move = new MovesModelMuc(dataContainer.getGeoData());
+                break;
+            default:
+                throw new RuntimeException("Models not defined for implementation " + Properties.get().main.implementation);
+        }
 
         return new SiloModelContainer(iomig, cons, ddOverwrite, renov, demol,
                 prm, birth, death, mardiv, lph, move, changeEmployment, changeSchoolUniv, changeDriversLicense, acc,
-                carOwnershipModel, updateJobs);
+                carOwnershipModel, updateJobs, createCarOwnershipModel);
     }
 
 
@@ -208,4 +216,11 @@ public class SiloModelContainer {
         return updateJobs;
     }
 
+    public CreateCarOwnershipModel getCreateCarOwnershipModel(){
+        if(createCarOwnershipModel != null) {
+            return createCarOwnershipModel;
+        } else {
+            throw new NullPointerException("Create car ownership model not available. Check implementation!");
+        }
+    }
 }

@@ -5,14 +5,12 @@ import de.tum.bgu.msm.SiloUtil;
 import de.tum.bgu.msm.container.SiloDataContainer;
 import de.tum.bgu.msm.container.SiloModelContainer;
 import de.tum.bgu.msm.data.*;
-import de.tum.bgu.msm.data.maryland.GeoDataMstm;
 import de.tum.bgu.msm.events.EventManager;
 import de.tum.bgu.msm.events.EventRules;
 import de.tum.bgu.msm.events.EventTypes;
 import de.tum.bgu.msm.properties.Properties;
 import org.apache.log4j.Logger;
 
-import javax.script.ScriptException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.ArrayList;
@@ -45,16 +43,15 @@ public class ConstructionModel {
 
     public ConstructionModel(GeoData geoData) {
         this.geoData = geoData;
-        Reader reader = new InputStreamReader(this.getClass().getResourceAsStream("ConstructionCalc"));
-        constructionLocationJSCalculator = new ConstructionLocationJSCalculator(reader, false);
+        Reader reader = new InputStreamReader(this.getClass().getResourceAsStream("ConstructionLocationCalc"));
+        constructionLocationJSCalculator = new ConstructionLocationJSCalculator(reader);
         setupConstructionModel();
         setupEvaluationOfZones();
     }
 
     private void setupConstructionModel() {
-        // read properties
         Reader reader = new InputStreamReader(this.getClass().getResourceAsStream("ConstructionDemandCalc"));
-        constructionDemandCalculator = new ConstructionDemandJSCalculator(reader, false);
+        constructionDemandCalculator = new ConstructionDemandJSCalculator(reader);
 
         makeSomeNewDdAffordable = Properties.get().realEstate.makeSOmeNewDdAffordable;
         if (makeSomeNewDdAffordable) {
@@ -86,15 +83,9 @@ public class ConstructionModel {
         float[][] avePriceByTypeAndRegion = calculateScaledAveragePriceByRegion(100);
         float[][] aveSizeByTypeAndRegion = calculateAverageSizeByTypeAndByRegion();
         for (DwellingType dt: DwellingType.values()) {
-            constructionDemandCalculator.setDwellingType(dt);
             int dto = dt.ordinal();
             for (int region: geoData.getRegionList()) {
-                constructionDemandCalculator.setVacancyByRegion(vacancyByRegion[dto][region]);
-                try {
-                    demandByRegion[dto][region] = constructionDemandCalculator.calculate().floatValue();
-                } catch (ScriptException e) {
-                    e.printStackTrace();
-                }
+                demandByRegion[dto][region] = constructionDemandCalculator.calculateConstructionDemand(vacancyByRegion[dto][region], dt);
             }
         }
         // try to satisfy demand, build more housing in zones with particularly low vacancy rates, if available land use permits
@@ -114,7 +105,8 @@ public class ConstructionModel {
                     if (avePrice == 0) avePrice = avePriceByTypeAndRegion[dto][region];
                     if (avePrice == 0)
                         logger.error("Ave. price is 0. Replaced with region-wide average price for this dwelling type.");
-                    util[zone] = getUtilityOfDwellingTypeInZone(dt, avePrice, modelContainer.getAcc().getAutoAccessibility(zone));
+                    // evaluate utility for building DwellingType dt where the average price of this dwelling type in this zone is avePrice
+                    util[zone] = constructionLocationJSCalculator.calculateConstructionProbability(dt, avePrice, modelContainer.getAcc().getAutoAccessibility(zone));
                 }
                 double[] prob = new double[SiloUtil.getHighestVal(zonesInThisRegion) + 1];
                 // walk through every dwelling to be built
@@ -295,20 +287,6 @@ public class ConstructionModel {
     }
 
 
-    private double getUtilityOfDwellingTypeInZone(DwellingType dt, float avePrice, double accessibility) {
-        // evaluate utility for building DwellingType dt where the average price of this dwelling type in this zone is avePrice
-        constructionLocationJSCalculator.setPrice(avePrice);
-        constructionLocationJSCalculator.setDwellingType(dt);
-        constructionLocationJSCalculator.setAccessibility(accessibility);
-        double utilJs = Double.NaN;
-        try {
-            utilJs = constructionLocationJSCalculator.calculate();
-        } catch (ScriptException e) {
-            e.printStackTrace();
-        }
-        return utilJs;
-    }
-
     public void buildDwelling(int id, int year, SiloModelContainer modelContainer, SiloDataContainer dataContainer) {
         // realize dwelling project id
 
@@ -325,11 +303,11 @@ public class ConstructionModel {
         double utils[] = modelContainer.getMove().updateUtilitiesOfVacantDwelling(dd, modelContainer);
         dd.setUtilitiesOfVacantDwelling(utils);
         dataContainer.getRealEstateData().addDwellingToVacancyList(dd);
-        EventManager.countEvent(EventTypes.ddConstruction);
+        EventManager.countEvent(EventTypes.DD_CONSTRUCTION);
 
         if (ddId == SiloUtil.trackDd) {
             SiloUtil.trackWriter.println("Dwelling " + ddId + " was constructed with these properties: ");
-            dd.logAttributes(SiloUtil.trackWriter);
+            SiloUtil.trackWriter.println(dd.toString());
         }
     }
 }
