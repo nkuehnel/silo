@@ -1,17 +1,22 @@
 package de.tum.bgu.msm.data;
 
+import cern.colt.matrix.tdouble.DoubleMatrix1D;
+import cern.colt.matrix.tdouble.DoubleMatrix2D;
+import cern.jet.math.tdouble.DoubleFunctions;
+import com.google.common.collect.ArrayTable;
+import com.google.common.collect.Table;
 import com.pb.common.datafile.TableDataSet;
-import com.pb.common.matrix.Matrix;
 import de.tum.bgu.msm.SiloUtil;
-import de.tum.bgu.msm.data.travelTimes.MatrixTravelTimes;
+import de.tum.bgu.msm.data.travelTimes.SkimTravelTimes;
 import de.tum.bgu.msm.data.travelTimes.TravelTimes;
 import de.tum.bgu.msm.properties.Properties;
-import de.tum.bgu.msm.transportModel.matsim.MatsimPTDistances;
+import de.tum.bgu.msm.util.matrices.Matrices;
 import omx.OmxFile;
 import omx.OmxMatrix;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.TransportMode;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -24,195 +29,161 @@ import java.util.Map;
 
 public class Accessibility {
 
-    static Logger logger = Logger.getLogger(Accessibility.class);
+    private final static Logger LOGGER = Logger.getLogger(Accessibility.class);
+
     private GeoData geoData;
-    private double[] autoAccessibility;
-    private double[] transitAccessibility;
-    private double[] regionalAccessibility;
     private float[] workTLFD;
-    private float autoOperatingCosts;
-    private Matrix travelTimeToRegion;
-	private final Map<String, TravelTimes> travelTimes = new LinkedHashMap<>();
-	private PTDistances ptDistances;
-	private static final double TIME_OF_DAY = 8*60.*60.;
+    private Table<Integer, Integer, Double> travelTimeToRegion;
+    private static final double TIME_OF_DAY = 8*60.*60.;
+
+    private final Map<String, TravelTimes> travelTimes = new LinkedHashMap<>();
+
+    private final DoubleMatrix1D autoAccessibilities;
+    private final DoubleMatrix1D transitAccessibilities;
+    private final DoubleMatrix1D regionalAccessibilities;
+
+
+    private final float autoOperatingCosts;
+    private final float alphaAuto;
+    private final float betaAuto;
+    private final float alphaTransit;
+    private final float betaTransit;
+
+    private final String transitMatrixName;
+    private final String carMatrixName;
+
 
     public Accessibility(GeoData geoData) {
         this.geoData = geoData;
+
         autoOperatingCosts = Properties.get().accessibility.autoOperatingCosts;
+
+        alphaAuto = Properties.get().accessibility.alphaAuto;
+        betaAuto = Properties.get().accessibility.betaAuto;
+        alphaTransit = Properties.get().accessibility.alphaTransit;
+        betaTransit = Properties.get().accessibility.betaTransit;
+
+        autoAccessibilities = Matrices.doubleMatrix1D(geoData.getZones().values());
+        transitAccessibilities = Matrices.doubleMatrix1D(geoData.getZones().values());
+        regionalAccessibilities = Matrices.doubleMatrix1D(geoData.getRegions().values());
+
+        // Work-around to make sure that existing code does not break
+        if (Properties.get().accessibility.usingTransitPeakSkim) {
+            transitMatrixName = Properties.get().accessibility.transitPeakSkim;
+        } else {
+            transitMatrixName = "CheapJrnyTime";
+        }
+
+        // Work-around to make sure that existing code does not break
+        if (Properties.get().accessibility.usingAutoPeakSkim) {
+            carMatrixName = Properties.get().accessibility.autoPeakSkim;
+        } else {
+            carMatrixName = "HOVTime";
+        }
     }
 
-	public void initialize() {
+	  public void initialize() {
         readWorkTripLengthFrequencyDistribution();
         calculateTravelTimesToRegions();
-	}
+	  }
 
     public void readCarSkim(int year) {
-        // Read hwySkim matrix for year
-        logger.info("Reading skims for " + year);
-
+        LOGGER.info("Reading car skims for " + year);
         String hwyFileName = Properties.get().main.baseDirectory + "skims/" + Properties.get().accessibility.autoSkimFile(year);
-        // Read highway hwySkim
-        OmxFile hSkim = new OmxFile(hwyFileName);
-        hSkim.openReadOnly();
-        // Work-around to make sure that existing code does not break
-        String matrixName = "HOVTime";
-        if (Properties.get().accessibility.usingAutoPeakSkim) matrixName = Properties.get().accessibility.autoPeakSkim;
-        OmxMatrix timeOmxSkimAutos = hSkim.getMatrix(matrixName);
-        Matrix hwySkim = SiloUtil.convertOmxToMatrix(timeOmxSkimAutos);
-        travelTimes.put(TransportMode.car, new MatrixTravelTimes(hwySkim));
-//        TableDataSet hwySkimTbl = SiloUtil.readCSVfile(hwyFileName);
-//        hwySkim = new Matrix(SiloUtil.getZones().length, SiloUtil.getZones().length);
-//        hwySkim.setExternalNumbersZeroBased(SiloUtil.getZones());
-//        for (int row = 1; row <= hwySkimTbl.getRowCount(); row++) {
-//            int orig = (int) hwySkimTbl.getValueAt(row, "OTAZ");
-//            int dest = (int) hwySkimTbl.getValueAt(row, "DTAZ");
-//            if (orig > SiloUtil.getHighestZonalId() || dest > SiloUtil.getHighestZonalId()) continue;
-//            hwySkim.setValueAt(orig, dest, hwySkimTbl.getValueAt(row, "time"));
-//        }
-        
-        
-        // Write out matrix as csv file for testing
-//        MatrixWriter matrixWriter = MatrixWriter.createWriter(MatrixType.CSV, new File("./info/given_impedance_" + year + ".csv"));
-//        new File(Properties.get().main.baseDirectory + "testing").mkdirs();
-//        MatrixWriter matrixWriter = MatrixWriter.createWriter(MatrixType.CSV, new File(Properties.get().main.baseDirectory + "testing/given_impedance_" + year + ".csv"));
-//        matrixWriter.writeMatrix(hwySkim);
-//        Log.info("For testing: Written skim out as a csv file");
-        
-        
-        // Read in matrix from csv
-//        public static Matrix convertCSVToMatrix (String fileName) {
-//        	
-//        for (int i = 0; i < dimensions[0]; i++)
-//            for (int j = 0; j < dimensions[1]; j++) {
-//                mat.setValueAt(i + 1, j + 1, (float) dArray[i][j]);
-////        		System.out.println("i = " + i + " ; j = " + j + " ; dArray[i][j] = " + dArray[i][j]);
-//            }
-//        return mat;
-//        }        
+        SkimTravelTimes skimTravelTimes = readSkim(hwyFileName, carMatrixName);
+        travelTimes.put(TransportMode.car, skimTravelTimes);
     }
     
-    public void readPtSkim(int year) {    
-        // Read transit hwySkim
+    public void readPtSkim(int year) {
+        LOGGER.info("Reading transit skims for " + year);
         String transitFileName = Properties.get().main.baseDirectory + "skims/" + Properties.get().accessibility.transitSkimFile(year);
-        OmxFile tSkim = new OmxFile(transitFileName);
-        tSkim.openReadOnly();
-        // Work-around to make sure that existing code does not break
-        String transitMatrixName = "CheapJrnyTime";
-        if (Properties.get().accessibility.usingTransitPeakSkim) transitMatrixName = Properties.get().accessibility.transitPeakSkim;
-
-        OmxMatrix timeOmxSkimTransit = tSkim.getMatrix(transitMatrixName);
-        Matrix transitSkim = SiloUtil.convertOmxToMatrix(timeOmxSkimTransit);
-        travelTimes.put(TransportMode.pt, new MatrixTravelTimes(transitSkim));
-//        TableDataSet transitSkimTbl = SiloUtil.readCSVfile(transitFileName);
-//        transitSkim = new Matrix(SiloUtil.getZones().length, SiloUtil.getZones().length);
-//        transitSkim.setExternalNumbersZeroBased(SiloUtil.getZones());
-//        for (int row = 1; row <= transitSkimTbl.getRowCount(); row++) {
-//            int orig = (int) transitSkimTbl.getValueAt(row, "OTAZ");
-//            int dest = (int) transitSkimTbl.getValueAt(row, "DTAZ");
-//            if (orig > SiloUtil.getHighestZonalId() || dest > SiloUtil.getHighestZonalId()) continue;
-//            transitSkim.setValueAt(orig, dest, transitSkimTbl.getValueAt(row, "time"));
-//        }
-//        for (int zn: SiloUtil.getZones()) transitSkim.setValueAt(zn, zn, 0);  // intrazonal distance not specified in this CUBE skim, set to 0
-    }
-    
-
-    public float getPeakAutoTravelTime(int i, int j) {
-    	return (float) travelTimes.get(TransportMode.car).getTravelTime(i, j, TIME_OF_DAY);
+        SkimTravelTimes SkimTravelTimes = readSkim(transitFileName, transitMatrixName);
+        travelTimes.put(TransportMode.pt, SkimTravelTimes);
     }
 
-    public float getPeakTransitTravelTime(int i, int j) {
-    	return (float) travelTimes.get(TransportMode.pt).getTravelTime(i, j, TIME_OF_DAY);
-    }
-
-    public float getPeakTravelCosts(int i, int j) {
-        return (autoOperatingCosts / 100f) * getPeakAutoTravelTime(i, j); // Take costs provided by MATSim here? Should be possible
-        // without much alterations as they are part of NodeData, which is contained in MATSimTravelTimes, nk/dz, jan'18
+    private SkimTravelTimes readSkim(String fileName, String matrixName) {
+    	  OmxFile omx = new OmxFile(fileName);
+        omx.openReadOnly();
+        OmxMatrix timeOmxSkimTransit = omx.getMatrix(matrixName) ;
+    	  return new SkimTravelTimes(Matrices.convertOmxToDoubleMatrix2D(timeOmxSkimTransit));
     }
 
     public void calculateAccessibilities (int year) {
         // Calculate Hansen TripGenAccessibility (recalculated every year)
 
-        logger.info("  Calculating accessibilities for " + year);
-        float alphaAuto = Properties.get().accessibility.alphaAuto;
-        float betaAuto = Properties.get().accessibility.betaAuto;
-        float alphaTransit = Properties.get().accessibility.alphaTransit;
-        float betaTransit = Properties.get().accessibility.betaTransit;
+        LOGGER.info("  Calculating accessibilities for " + year);
+        final DoubleMatrix1D population = SummarizeData.getPopulationByZone(geoData);
 
-        int[] zones = geoData.getZones();
-        int[] pop = SummarizeData.getPopulationByZone(geoData);
-        autoAccessibility = new double[zones.length];
-        transitAccessibility = new double[zones.length];
-        int counter = 0;
-        for (int orig: zones) {
-            if(Math.log10(counter) / Math.log10(2.) % 1 == 0) {
-                logger.info(counter + " accessibilities calculated");
-            }
-            autoAccessibility[geoData.getZoneIndex(orig)] = 0;
-            transitAccessibility[geoData.getZoneIndex(orig)] = 0;
-            for (int dest: zones) {
-                double autoImpedance;
-                double autoTravelTime = getPeakAutoTravelTime(orig, dest);
-                if (autoTravelTime == 0) {      // should never happen for auto
-                    autoImpedance = 0;
-                } else {
-                    autoImpedance = Math.exp(betaAuto * autoTravelTime);
-                }
-                double transitImpedance;
-                double transitTravelTime = getPeakTransitTravelTime(orig, dest);
-                if (transitTravelTime == 0) {   // zone is not connected by walk-to-transit
-                    transitImpedance = 0;
-                } else {
-                    transitImpedance = Math.exp(betaTransit * transitTravelTime);
-                }
-                // dz: zone "orig" and its zoneIndex "GeoDataMstm.getZoneIndex(orig)" are different!!
-                // "orig" is the ID of the zone and zoneIndex is its location in the array
-                // zoneIndex is "indexArray for array" zones
-                autoAccessibility[geoData.getZoneIndex(orig)] += Math.pow(pop[dest], alphaAuto) * autoImpedance;
-                transitAccessibility[geoData.getZoneIndex(orig)] += Math.pow(pop[dest], alphaTransit) * transitImpedance;
-            }
-            counter++;
-        }
-        
-        
-        // new -- write output
-//      System.out.println("zone = " + orig + " has autoAccessibility = " + autoAccessibility[GeoDataMstm.getZoneIndex(orig)]);
-//      System.out.println("zone = " + orig + " has zoneIndex = " + GeoDataMstm.getZoneIndex(orig))
+        LOGGER.info("  Calculating zone zone accessibilities: auto");
+        final DoubleMatrix2D autoAccessZoneToZone =
+                calculateZoneToZoneAccessibilities(population, getPeakAutoTravelTimeMatrix(), alphaAuto, betaAuto);
+        LOGGER.info("  Calculating zone zone accessibilities: transit");
+        final DoubleMatrix2D transitAccessZoneToZone =
+                calculateZoneToZoneAccessibilities(population, getPeakTransitTravelTimeMatrix(), alphaTransit, betaTransit);
 
+        LOGGER.info("  Aggregating zone accessibilities");
+        aggregateAccessibilities(autoAccessZoneToZone, transitAccessZoneToZone, autoAccessibilities, transitAccessibilities, geoData.getZones().keySet());
 
-/*  RM: Had to comment out this part because model fails when CSVFileWriter is called. Seems to be an issue within MATSim:
-Exception in thread "main" java.lang.NoClassDefFoundError: org/matsim/core/utils/io/IOUtils
-at de.tum.bgu.msm.transportModel.CSVFileWriter.<init>(CSVFileWriter.java:29)
-at de.tum.bgu.msm.data.Accessibility.calculateAccessibilities(Accessibility.java:204)
+        LOGGER.info("  Scaling zone accessibilities");
+        scaleAccessibility(autoAccessibilities);
+        scaleAccessibility(transitAccessibilities);
 
-        new File(Properties.get().main.baseDirectory + "testing").mkdirs();
-        CSVFileWriter accessibilityFileWriter = new CSVFileWriter(Properties.get().main.baseDirectory + "testing/accessibility_" + year +".csv", ",");
-		
-		accessibilityFileWriter.writeField("zoneId");
-		accessibilityFileWriter.writeField("autoAccessibility");
-		accessibilityFileWriter.writeNewLine();
+        LOGGER.info("  Calculating regional accessibilities");
+        regionalAccessibilities.assign(calculateRegionalAccessibility(geoData.getRegions().values(), autoAccessibilities));
+    }
 
-		for (int i = 0; i < zones.length; i++) {
-				accessibilityFileWriter.writeField(zones[i]);
-				accessibilityFileWriter.writeField(autoAccessibility[GeoDataMstm.getZoneIndex(i)]);
-				accessibilityFileWriter.writeNewLine();    
-		}
-		
-		accessibilityFileWriter.close();
-		Log.info("For testing: Written accessibilities out as a csv file");
-		// end new
-*/
-		
-		
-        autoAccessibility = SiloUtil.scaleArray(autoAccessibility, 100);
-        transitAccessibility = SiloUtil.scaleArray(transitAccessibility, 100);
+    /**
+     * Calculates regional accessibilities for the given regions and zonal accessibilities and returns them in a vector
+     * @param regions the regions to calculate the accessibility for
+     * @param autoAccessibilities the accessibility vector containing values for each zone
+     */
+    static DoubleMatrix1D calculateRegionalAccessibility(Collection<Region> regions, DoubleMatrix1D autoAccessibilities) {
+        final DoubleMatrix1D matrix = Matrices.doubleMatrix1D(regions);
+        regions.parallelStream().forEach(r -> {
+            double sum = r.getZones().stream().mapToDouble(z -> autoAccessibilities.getQuick(z.getId())).sum() / r.getZones().size();
+            matrix.setQuick(r.getId(), sum);
+        });
+        return matrix;
+    }
 
-        regionalAccessibility = new double[geoData.getRegionList().length];
-        for (int region: geoData.getRegionList()) {
-            int[] zonesInThisRegion = geoData.getZonesInRegion(region);
-            double sm = 0;
-            for (int zone: zonesInThisRegion) sm += autoAccessibility[geoData.getZoneIndex(zone)];
-             regionalAccessibility[geoData.getRegionIndex(region)] = sm / zonesInThisRegion.length;
-        }
+    /**
+     * Scales the accessibility vector such that the highest value equals to 100
+     * @param accessibility the accessibility vector containing agregated accessbilities for every zone
+     */
+    static void scaleAccessibility(DoubleMatrix1D accessibility) {
+        final double sumScaleFactor = 100.0 / accessibility.getMaxLocation()[0];
+        accessibility.assign(DoubleFunctions.mult(sumScaleFactor));
+    }
+
+    /**
+     * Aggregates the zone to zone accessibilities into the given vectors, only considering the given keys.
+     * @param autoAcessibilities zone to zone accessibility matrix for auto
+     * @param transitAccessibilities zone to zone accessibility matrix for transit
+     * @param aggregatedAuto vector to which the the aggregated auto accessibilities  will be written to
+     * @param aggregatedTransit vector to which the the aggregated transit accessibilities will be written to
+     * @param keys zone ids that will be considered for aggregation
+     */
+    static void aggregateAccessibilities(DoubleMatrix2D autoAcessibilities, DoubleMatrix2D transitAccessibilities,
+                                          DoubleMatrix1D aggregatedAuto, DoubleMatrix1D aggregatedTransit, Collection<Integer> keys) {
+        keys.forEach(i -> {
+            aggregatedAuto.setQuick(i, autoAcessibilities.viewRow(i).zSum());
+            aggregatedTransit.setQuick(i, transitAccessibilities.viewRow(i).zSum());});
+    }
+
+    /**
+     * Aggregates the zone to zone Hansen accessibilities into the given vectors, only considering the given keys.
+     * Formula for origin i to destinations j:
+     * accessibility_i = population_j^alpha * e^(beta * traveltime_ij)
+     * @param population a vector containing the population by zone
+     * @param travelTimes zone to zone travel time matrix
+     * @param alpha alpha parameter used for the hansen calculation
+     * @param beta beta parameter used for the hansen calculation
+     */
+    static DoubleMatrix2D calculateZoneToZoneAccessibilities(DoubleMatrix1D population, DoubleMatrix2D travelTimes, double alpha, double beta) {
+        final int size = Math.toIntExact(population.size());
+        final DoubleMatrix2D travelTimesCopy = travelTimes.viewPart(0,0, size, size).copy();
+        return travelTimesCopy.forEachNonZero((origin, destination, travelTime) ->
+                Math.pow(population.getQuick(destination), alpha) * Math.exp(beta * travelTime));
     }
 
 
@@ -224,7 +195,7 @@ at de.tum.bgu.msm.data.Accessibility.calculateAccessibilities(Accessibility.java
         workTLFD = new float[tlfd.getRowCount() + 1];
         for (int row = 1; row <= tlfd.getRowCount(); row++) {
             int tt = (int) tlfd.getValueAt(row, "TravelTime");
-            if (tt > workTLFD.length) logger.error("Inconsistent trip length frequency in " + Properties.get().main.baseDirectory +
+            if (tt > workTLFD.length) LOGGER.error("Inconsistent trip length frequency in " + Properties.get().main.baseDirectory +
                     Properties.get().accessibility.htsWorkTLFD + ": " + tt + ". Provide data in 1-min increments.");
             workTLFD[tt] = tlfd.getValueAt(row, "utility");
         }
@@ -232,44 +203,36 @@ at de.tum.bgu.msm.data.Accessibility.calculateAccessibilities(Accessibility.java
 
 
     private void calculateTravelTimesToRegions() {
-        travelTimeToRegion = new Matrix(geoData.getZones().length, geoData.getRegionList().length);
-        travelTimeToRegion.setExternalNumbersZeroBased(geoData.getZones(), geoData.getRegionList());
-        for (int iz: geoData.getZones()) {
-            float[] minDist = new float[SiloUtil.getHighestVal(geoData.getRegionList())+1];
-            for (int i = 0; i < minDist.length; i++) minDist[i] = Float.MAX_VALUE;
-            for (int jz: geoData.getZones()) {
-                int region = geoData.getRegionOfZone(jz);
-                float travelTime = getPeakAutoTravelTime(iz, jz);
-                minDist[region] = Math.min(minDist[region], travelTime);
+        travelTimeToRegion = ArrayTable.create(geoData.getZones().keySet(), geoData.getRegions().keySet());
+
+        for (Zone zone: geoData.getZones().values()) {
+            for(Region region: geoData.getRegions().values()) {
+                double minDist = Double.MAX_VALUE;
+                for(Zone zoneInRegion: region.getZones()) {
+                    double travelTime = getPeakAutoTravelTime(zone.getId(), zoneInRegion.getId());
+                    minDist = Math.min(minDist, travelTime);
+                }
+                travelTimeToRegion.put(zone.getId(), region.getId(), minDist);
             }
-            for (int region: geoData.getRegionList()) travelTimeToRegion.setValueAt(iz, region, minDist[region]);
         }
     }
 
-
-    public double getAutoAccessibility(int zone) {
-        return autoAccessibility[geoData.getZoneIndex(zone)];
-    }
-
-    public double getTransitAccessibility(int zone) {
-        return transitAccessibility[geoData.getZoneIndex(zone)];
-    }
-
-
     public float getWorkTLFD (int minutes) {
         // return probability to commute 'minutes'
-        if (minutes < workTLFD.length) return workTLFD[minutes];
-        else return 0;
+        if (minutes < workTLFD.length) {
+            return workTLFD[minutes];
+        } else {
+            return 0;
+        }
     }
 
-
     public double getRegionalAccessibility (int region) {
-        return regionalAccessibility[geoData.getRegionIndex(region)];
+        return regionalAccessibilities.getQuick(region);
     }
 
 
     public float getMinTravelTimeFromZoneToRegion(int zone, int region) {
-        return travelTimeToRegion.getValueAt(zone, region);
+        return travelTimeToRegion.get(zone, region).floatValue();
     }
 
 
@@ -280,23 +243,67 @@ at de.tum.bgu.msm.data.Accessibility.calculateAccessibilities(Accessibility.java
 	
 	public void addTravelTimeForMode(String mode, TravelTimes travelTimes) {
 		if (mode == null) {
-			logger.fatal("Mode is null. Aborting...", new RuntimeException());
+			LOGGER.fatal("Mode is null. Aborting...", new RuntimeException());
 		}
 		if (travelTimes == null) {
-			logger.fatal("TravelTimes object is null. Aborting...", new RuntimeException());
+			LOGGER.fatal("TravelTimes object is null. Aborting...", new RuntimeException());
 		}
 		if (this.travelTimes.containsKey(mode)) {
-			logger.info("Replace travel time for " + mode + " mode.");
+			LOGGER.info("Replace travel time for " + mode + " mode.");
 		}
 		this.travelTimes.put(mode, travelTimes);
 	}
 
-	
-	public void setPTDistances(PTDistances ptDistances) {
-		this.ptDistances = ptDistances;
-	}
+    public double getAutoAccessibilityForZone(int zoneId) {
+        return this.autoAccessibilities.getQuick(zoneId);
+    }
 
-	public PTDistances getPtDistances() {
-        return this.ptDistances;
+    public double getTransitAccessibilityForZone(int zoneId) {
+        return this.transitAccessibilities.getQuick(zoneId);
+    }
+
+    public double getPeakAutoTravelTime(int i, int j) {
+        return travelTimes.get(TransportMode.car).getTravelTime(i, j, TIME_OF_DAY);
+    }
+
+    public double getPeakTransitTravelTime(int i, int j) {
+        return travelTimes.get(TransportMode.pt).getTravelTime(i, j, TIME_OF_DAY);
+    }
+
+    public DoubleMatrix2D getPeakAutoTravelTimeMatrix() {
+        TravelTimes tt = travelTimes.get(TransportMode.car);
+        if(tt instanceof SkimTravelTimes) {
+            return ((SkimTravelTimes) tt).getPeakTravelTimeMatrix();
+        } else {
+            final DoubleMatrix2D matrix = Matrices.doubleMatrix2D(geoData.getZones().values(), geoData.getZones().values());
+            for(int origin: geoData.getZones().keySet()) {
+                for(int destination: geoData.getZones().keySet()) {
+                    matrix.setQuick(origin, destination, tt.getTravelTime(origin, destination, TIME_OF_DAY));
+                }
+            }
+            return matrix;
+        }
+    }
+
+    public DoubleMatrix2D getPeakTransitTravelTimeMatrix() {
+        TravelTimes tt = travelTimes.get(TransportMode.pt);
+        if(tt instanceof SkimTravelTimes) {
+            return ((SkimTravelTimes) tt).getPeakTravelTimeMatrix();
+        } else {
+            final DoubleMatrix2D matrix = Matrices.doubleMatrix2D(geoData.getZones().values(), geoData.getZones().values());
+            for(int origin: geoData.getZones().keySet()) {
+                for(int destination: geoData.getZones().keySet()) {
+                    matrix.setQuick(origin, destination, tt.getTravelTime(origin, destination, TIME_OF_DAY));
+                }
+            }
+            return matrix;
+        }
+    }
+
+
+    public double getPeakTravelCosts(int i, int j) {
+        return (autoOperatingCosts / 100) * getPeakAutoTravelTime(i, j);
+        // Take costs provided by MATSim here? Should be possible
+        // without much alterations as they are part of NodeData, which is contained in MATSimTravelTimes, nk/dz, jan'18
     }
 }
