@@ -15,3 +15,12 @@ lib/
 /timeTracker.csv
 scenOutput
 status.csv
+test/output/*
+*2002.csv
+test/scenarios/annapolis/null_t.csv
+
+tripAttraction.csv
+
+tripProduction.csv
+
+src/main/java/META-INF/MANIFEST.MF

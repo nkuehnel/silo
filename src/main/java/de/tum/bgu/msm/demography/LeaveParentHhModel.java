@@ -47,7 +47,12 @@ public class LeaveParentHhModel {
 
     private void setupLPHModel() {
 
-        Reader reader = new InputStreamReader(this.getClass().getResourceAsStream("LeaveParentHhCalc"));
+        Reader reader;
+        if(Properties.get().main.implementation == Implementation.MUNICH) {
+            reader = new InputStreamReader(this.getClass().getResourceAsStream("LeaveParentHhCalcMstm"));
+        } else {
+            reader = new InputStreamReader(this.getClass().getResourceAsStream("LeaveParentHhCalcMuc"));
+        }
         LeaveParentHhJSCalculator calculator = new LeaveParentHhJSCalculator(reader);
 
         // initialize results for each alternative
@@ -83,7 +88,7 @@ public class LeaveParentHhModel {
             hhOfThisPerson.removePerson(per, dataContainer);
             hhOfThisPerson.setType();
             int newHhId = HouseholdDataManager.getNextHouseholdId();
-            Household hh = new Household(newHhId, -1, -1,  0);
+            Household hh = new Household(newHhId, -1,  0);
             hh.addPerson(per);
             hh.setType();
             hh.determineHouseholdRace();

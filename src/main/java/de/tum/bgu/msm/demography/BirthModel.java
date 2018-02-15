@@ -38,12 +38,10 @@ import java.io.Reader;
 
 public class BirthModel {
 
-    private static float propGirl;
     private final HouseholdDataManager householdDataManager;
     private static BirthJSCalculator calculator;
 
     public BirthModel(HouseholdDataManager householdDataManager) {
-        propGirl = Properties.get().demographics.propabilityForGirl;
         this.householdDataManager = householdDataManager;
         setupBirthModel();
 	}
@@ -52,8 +50,7 @@ public class BirthModel {
     private void setupBirthModel() {
         Reader reader;
         if(Properties.get().main.implementation == Implementation.MUNICH) {
-            // todo: Update Birth Probabilities for Munich, add also to test class
-            reader = new InputStreamReader(this.getClass().getResourceAsStream("BirthProbabilityCalcMstm"));
+            reader = new InputStreamReader(this.getClass().getResourceAsStream("BirthProbabilityCalcMuc"));
         } else {
             reader = new InputStreamReader(this.getClass().getResourceAsStream("BirthProbabilityCalcMstm"));
         }
@@ -84,8 +81,8 @@ public class BirthModel {
     }
 
 
-    public static float getProbabilityForGirl () {
-        return propGirl;
+    public static double getProbabilityForGirl () {
+        return calculator.getProbabilityForGirl();
     }
 
 
@@ -102,7 +99,9 @@ public class BirthModel {
         per.setAge(age);
         per.setType(age, per.getGender());
         EventManager.countEvent(EventTypes.BIRTHDAY);
-        if (personId == SiloUtil.trackPp) SiloUtil.trackWriter.println("Celebrated BIRTHDAY of person " +
-                personId + ". New age is " + age + ".");
+        if (personId == SiloUtil.trackPp) {
+            SiloUtil.trackWriter.println("Celebrated BIRTHDAY of person " +
+                    personId + ". New age is " + age + ".");
+        }
     }
 }

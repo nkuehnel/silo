@@ -16,13 +16,10 @@
  */
 package de.tum.bgu.msm;
 
-import com.pb.common.util.ResourceUtil;
 import de.tum.bgu.msm.container.SiloDataContainer;
 import de.tum.bgu.msm.container.SiloModelContainer;
-import de.tum.bgu.msm.data.DefaultPTDistances;
 import de.tum.bgu.msm.data.Dwelling;
 import de.tum.bgu.msm.data.SummarizeData;
-import de.tum.bgu.msm.data.munich.GeoDataMuc;
 import de.tum.bgu.msm.events.EventManager;
 import de.tum.bgu.msm.events.EventTypes;
 import de.tum.bgu.msm.events.IssueCounter;
@@ -34,7 +31,6 @@ import org.matsim.core.config.ConfigUtils;
 import org.apache.log4j.Logger;
 import org.matsim.core.config.Config;
 
-import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
@@ -100,10 +96,6 @@ public class SiloModel {
 		if (Properties.get().main.createPrestoSummary) {
 			SummarizeData.preparePrestoSummary(dataContainer.getGeoData());
 		}
-
-		if(!runMatsim && Properties.get().main.implementation == Implementation.MUNICH) {
-			modelContainer.getAcc().setPTDistances(new DefaultPTDistances((GeoDataMuc) dataContainer.getGeoData()));
-		}
 	}
 
 	private void setupTimeTracker() {
@@ -129,6 +121,7 @@ public class SiloModel {
 			logger.info("  MITO is used as the transport model");
 			modelContainer.getAcc().readCarSkim(Properties.get().main.startYear);
 			modelContainer.getAcc().readPtSkim(Properties.get().main.startYear);
+			transportModel = new MitoTransportModel(Properties.get().main.baseDirectory, dataContainer.getGeoData(), modelContainer);
 			File rbFile = new File(Properties.get().transportModel.demandModelPropertiesPath);
 			transportModel = new MitoTransportModel(ResourceUtil.getPropertyBundle(rbFile), Properties.get().main.baseDirectory, dataContainer.getGeoData(), modelContainer);
 			//this line is to run matsim after mito in the start year

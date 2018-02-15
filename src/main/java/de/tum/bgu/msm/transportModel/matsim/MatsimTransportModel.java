@@ -136,7 +136,6 @@ public class MatsimTransportModel implements TransportModelI {
 		
 		if (config.transit().isUseTransit() && Properties.get().main.implementation == Implementation.MUNICH) {
 			MatsimPTDistances matsimPTDistances = new MatsimPTDistances(config, scenario, (GeoDataMuc) dataContainer.getGeoData());
-			acc.setPTDistances(matsimPTDistances);
 		}
 	}
 }
