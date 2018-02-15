@@ -122,8 +122,6 @@ public class SiloModel {
 			modelContainer.getAcc().readCarSkim(Properties.get().main.startYear);
 			modelContainer.getAcc().readPtSkim(Properties.get().main.startYear);
 			transportModel = new MitoTransportModel(Properties.get().main.baseDirectory, dataContainer.getGeoData(), modelContainer);
-			File rbFile = new File(Properties.get().transportModel.demandModelPropertiesPath);
-			transportModel = new MitoTransportModel(ResourceUtil.getPropertyBundle(rbFile), Properties.get().main.baseDirectory, dataContainer.getGeoData(), modelContainer);
 			//this line is to run matsim after mito in the start year
 			if (Properties.get().transportModel.runMatsimAfterMito) {
 				transportModel.runTransportModel(Properties.get().main.startYear);

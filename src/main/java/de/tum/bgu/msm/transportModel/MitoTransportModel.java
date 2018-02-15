@@ -39,7 +39,7 @@ public final class MitoTransportModel implements TransportModelI {
 
     public MitoTransportModel(String baseDirectory, GeoData geoData, SiloModelContainer modelContainer) {
 		String propertiesPath = Properties.get().transportModel.demandModelPropertiesPath;
-        this.mito = MitoModel.standAloneModel(propertiesPath, Implementation.valueOf(Properties.get().main.implementation.name()));
+        //this.mito = MitoModel.standAloneModel(propertiesPath, Implementation.valueOf(Properties.get().main.implementation.name()));
         this.geoData = geoData;
         this.modelContainer = modelContainer;
         //mito.setRandomNumberGenerator(SiloUtil.getRandomObject());

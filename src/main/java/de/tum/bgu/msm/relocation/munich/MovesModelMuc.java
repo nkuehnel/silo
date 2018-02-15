@@ -138,8 +138,6 @@ public class MovesModelMuc extends AbstractDefaultMovesModel {
         differentCounter = 0;
         sameCounter = 0;
 
-
-        householdsByRegion = HouseholdDataManager.getNumberOfHouseholdsByRegion(geoData);
     }
 
     @Override
