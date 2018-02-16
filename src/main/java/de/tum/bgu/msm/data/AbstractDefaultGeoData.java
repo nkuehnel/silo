@@ -226,14 +226,4 @@ public abstract class AbstractDefaultGeoData implements GeoData {
         }
         return (developmentRestrictions.getIndexedValueAt(zone, col) == 1);
     }
-
-    public float getDistanceToTransitOfZone(int zone) {
-        return zonalData.getIndexedValueAt(zone, "distanceToTransit");
-    }
-
-    public int getAreaTypeOfZone(int zone) {
-        return (int) zonalData.getIndexedValueAt(zone, "BBSR");
-    }
-
-
 }

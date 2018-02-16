@@ -141,7 +141,7 @@ public class SiloModelContainer {
                 carOwnershipModel = new MaryLandCarOwnershipModel(dataContainer.getJobData(), acc);
                 break;
             case MUNICH:
-                createCarOwnershipModel = new CreateCarOwnershipModel((GeoDataMuc)dataContainer.getGeoData(), acc);
+                createCarOwnershipModel = new CreateCarOwnershipModel((GeoDataMuc)dataContainer.getGeoData());
                 carOwnershipModel = new MunichCarOwnerShipModel();
                 move = new MovesModelMuc(dataContainer.getGeoData());
                 switchToAutonomousVehicleModel = new SwitchToAutonomousVehicleModel();

@@ -7,6 +7,7 @@ import de.tum.bgu.msm.data.SummarizeData;
 import de.tum.bgu.msm.SiloUtil;
 import de.tum.bgu.msm.data.*;
 import de.tum.bgu.msm.data.munich.GeoDataMuc;
+import de.tum.bgu.msm.data.munich.MunichZone;
 import org.apache.log4j.Logger;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -24,14 +25,12 @@ public class CreateCarOwnershipModel {
 
     private final CreateCarOwnershipJSCalculator calculator;
     private final GeoDataMuc geoDataMuc;
-    private final Accessibility accessibility;
 
-    public CreateCarOwnershipModel(GeoDataMuc geoDataMuc, Accessibility accessibility) {
+    public CreateCarOwnershipModel(GeoDataMuc geoDataMuc) {
         logger.info(" Setting up probabilities for car ownership model");
         Reader reader = new InputStreamReader(this.getClass().getResourceAsStream("CreateCarOwnershipCalc"));
         calculator = new CreateCarOwnershipJSCalculator(reader);
         this.geoDataMuc = geoDataMuc;
-        this.accessibility = accessibility;
     }
 
     public void run() {
@@ -49,8 +48,8 @@ public class CreateCarOwnershipModel {
         int workers = hh.getNumberOfWorkers();
         int income = hh.getHhIncome()/12;  // convert yearly into monthly income
         //add 1 to the value of distance to transit before taking log to avoid situations of log 0
-        double logDistanceToTransit = Math.log(accessibility.getPtDistances().getDistanceToNearestPTStop(hh.getHomeZone()) + 1) ;
-        int areaType = geoDataMuc.getAreaTypeOfZone(hh.getHomeZone());
+        double logDistanceToTransit = Math.log(((MunichZone)geoDataMuc.getZones().get(hh.getHomeZone())).getPTDistance() + 1) ;
+        int areaType = ((MunichZone)geoDataMuc.getZones().get(hh.getHomeZone())).getAreaType();
 
         double[] prob = calculator.calculate(license, workers, income, logDistanceToTransit, areaType);
         hh.setAutos(SiloUtil.select(prob));

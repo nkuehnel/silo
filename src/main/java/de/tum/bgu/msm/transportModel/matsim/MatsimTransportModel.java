@@ -21,10 +21,13 @@ package de.tum.bgu.msm.transportModel.matsim;
 import de.tum.bgu.msm.Implementation;
 import de.tum.bgu.msm.container.SiloDataContainer;
 import de.tum.bgu.msm.data.Accessibility;
+import de.tum.bgu.msm.data.Zone;
 import de.tum.bgu.msm.data.munich.GeoDataMuc;
+import de.tum.bgu.msm.data.munich.MunichZone;
 import de.tum.bgu.msm.properties.Properties;
 import de.tum.bgu.msm.transportModel.TransportModelI;
 import org.apache.log4j.Logger;
+import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.Population;
 import org.matsim.api.core.v01.population.PopulationWriter;
@@ -37,7 +40,10 @@ import org.matsim.core.router.util.TravelDisutility;
 import org.matsim.core.router.util.TravelTime;
 import org.matsim.core.scenario.MutableScenario;
 import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.core.utils.geometry.CoordUtils;
 import org.matsim.core.utils.gis.ShapeFileReader;
+import org.matsim.pt.router.TransitRouterConfig;
+import org.matsim.pt.router.TransitRouterNetwork;
 import org.matsim.utils.leastcostpathtree.LeastCostPathTree;
 import org.opengis.feature.simple.SimpleFeature;
 
@@ -57,7 +63,6 @@ public class MatsimTransportModel implements TransportModelI {
 	private final SiloDataContainer dataContainer;
 	private final Accessibility acc;
 	private final Config initialMatsimConfig;
-
 
 	public MatsimTransportModel(SiloDataContainer dataContainer, Accessibility acc, Config matsimConfig) {
 		Gbl.assertNotNull(dataContainer);
@@ -133,7 +138,19 @@ public class MatsimTransportModel implements TransportModelI {
 //		acc.addTravelTimeForMode(TransportMode.pt, matsimTravelTimes); // use car times for now also, as pt travel times are too slow to compute, Nico Oct 17
 		
 		if (config.transit().isUseTransit() && Properties.get().main.implementation == Implementation.MUNICH) {
-			MatsimPTDistances matsimPTDistances = new MatsimPTDistances(config, scenario, (GeoDataMuc) dataContainer.getGeoData());
+			updatePTDistances(config, scenario);
 		}
+	}
+
+	private void updatePTDistances(Config config, MutableScenario scenario) {
+		final TransitRouterConfig transitConfig = new TransitRouterConfig(config);
+		final TransitRouterNetwork transitRouterNetwork = TransitRouterNetwork.createFromSchedule(
+                scenario.getTransitSchedule(), transitConfig.getBeelineWalkConnectionDistance());
+		for(Zone zone: dataContainer.getGeoData().getZones().values()) {
+            final Coord zoneCoord = ((MunichZone)zone).getCoord();
+            final Coord nearestStopCoord = transitRouterNetwork.getNearestNode(zoneCoord).stop.getStopFacility().getCoord();
+            final double distance = CoordUtils.calcEuclideanDistance(zoneCoord, nearestStopCoord);
+            ((MunichZone) zone).setPtDistance(distance);
+        }
 	}
 }

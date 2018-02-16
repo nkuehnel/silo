@@ -32,10 +32,11 @@ public class GeoDataMuc extends AbstractDefaultGeoData {
         double[] centroidX = zonalData.getColumnAsDouble("centroidX");
         double[] centroidY = zonalData.getColumnAsDouble("centroidY");
         double[] ptDistances = zonalData.getColumnAsDouble("distanceToTransit");
+        int[] areaTypes = zonalData.getColumnAsInt("BBSR");
 
         for(int i = 0; i < zoneIds.length; i++) {
             Coord centroid = new Coord(centroidX[i], centroidY[i]);
-            MunichZone zone = new MunichZone(zoneIds[i], zoneMsa[i], zoneAreas[i], centroid, ptDistances[i]);
+            MunichZone zone = new MunichZone(zoneIds[i], zoneMsa[i], zoneAreas[i], centroid, ptDistances[i], areaTypes[i]);
             zones.put(zoneIds[i], zone);
         }
     }

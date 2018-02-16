@@ -6,12 +6,14 @@ import org.matsim.api.core.v01.Coord;
 public class MunichZone extends ZoneImpl {
 
     private final Coord coord;
+    private final int areaType;
     private double ptDistance;
 
-    public MunichZone(int id, int msa, float area, Coord coord, double initialPTDistance) {
+    public MunichZone(int id, int msa, float area, Coord coord, double initialPTDistance, int areaType) {
         super(id, msa, area);
         this.coord = coord;
         this.ptDistance = initialPTDistance;
+        this.areaType = areaType;
     }
 
     public Coord getCoord() {
@@ -24,5 +26,9 @@ public class MunichZone extends ZoneImpl {
 
     public void setPtDistance(double ptDistance) {
         this.ptDistance = ptDistance;
+    }
+
+    public int getAreaType() {
+        return this.areaType;
     }
 }

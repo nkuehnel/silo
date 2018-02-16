@@ -10,6 +10,7 @@ import de.tum.bgu.msm.SiloUtil;
 import de.tum.bgu.msm.data.travelTimes.SkimTravelTimes;
 import de.tum.bgu.msm.data.travelTimes.TravelTimes;
 import de.tum.bgu.msm.properties.Properties;
+import de.tum.bgu.msm.transportModel.matsim.MatsimPTDistances;
 import de.tum.bgu.msm.util.matrices.Matrices;
 import omx.OmxFile;
 import omx.OmxMatrix;
