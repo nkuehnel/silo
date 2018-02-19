@@ -556,7 +556,7 @@ public class SyntheticPopUs implements SyntheticPopI {
                 int numberOfJobsInThisZone = vacantJobsByZone.get(zones[zn]).length;
                 if (numberOfJobsInThisZone > 0) {
                     int distance = (int) (accessibility.getPeakAutoTravelTime(homeTaz, zones[zn]) + 0.5);
-                    zoneProbability[zn] = accessibility.getWorkTLFD(distance) * (double) numberOfJobsInThisZone;
+                    zoneProbability[zn] = accessibility.getCommutingTimeProbability(distance) * (double) numberOfJobsInThisZone;
                 } else {
                     zoneProbability[zn] = 0;
                 }
@@ -712,7 +712,7 @@ public class SyntheticPopUs implements SyntheticPopI {
         HashMap<String, ArrayList<Integer>> ddPointer = new HashMap<>();
         // summarize vacancy
         int[][][] ddCount = new int [geoData.getHighestZonalId() + 1][DwellingType.values().length][2];
-        for (Dwelling dd: Dwelling.getDwellingArray()) {
+        for (Dwelling dd: Dwelling.getDwellings()) {
             int taz = dd.getZone();
             int occ = dd.getResidentId();
             ddCount[taz][dd.getType().ordinal()][0]++;
@@ -818,7 +818,7 @@ public class SyntheticPopUs implements SyntheticPopI {
 //        pwh.close();
 //        logger.info ("  Validating dwellings");
 //        int ddByPumaType[][] = new int[pumas.length][DwellingType.values().length];  // summary by puma and dwelling type
-//        for (Dwelling dd: Dwelling.getDwellingArray()) {
+//        for (Dwelling dd: Dwelling.getDwellings()) {
 //            int taz = dd.getZone();
 //            int puma = SiloUtil.getPUMAofZone(taz);
 //            int ddType = dd.getType().ordinal();
@@ -833,7 +833,7 @@ public class SyntheticPopUs implements SyntheticPopI {
 
         int[] ddCount = new int[DwellingType.values().length];
         int[] occCount = new int[DwellingType.values().length];
-        for (Dwelling dd: Dwelling.getDwellingArray()) {
+        for (Dwelling dd: Dwelling.getDwellings()) {
             int id = dd.getResidentId();
             DwellingType tp = dd.getType();
             ddCount[tp.ordinal()]++;

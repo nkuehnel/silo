@@ -63,12 +63,14 @@ public class MatsimTransportModel implements TransportModelI {
 	private final SiloDataContainer dataContainer;
 	private final Accessibility acc;
 	private final Config initialMatsimConfig;
+	private final MatsimTravelTimes travelTimes;
 
 	public MatsimTransportModel(SiloDataContainer dataContainer, Accessibility acc, Config matsimConfig) {
 		Gbl.assertNotNull(dataContainer);
 		this.dataContainer = dataContainer;
 		this.acc = acc;
 		this.initialMatsimConfig = matsimConfig;
+		this.travelTimes = new MatsimTravelTimes();
 	}
 
 	@Override
@@ -129,12 +131,11 @@ public class MatsimTransportModel implements TransportModelI {
 		
 		LeastCostPathTree leastCoastPathTree = new LeastCostPathTree(travelTime, travelDisutility);
 		
-		MatsimTravelTimes matsimTravelTimes = new MatsimTravelTimes(leastCoastPathTree, zoneFeatureMap, scenario.getNetwork());
+		travelTimes.update(leastCoastPathTree, zoneFeatureMap, scenario.getNetwork());
 		// for now, pt inforamtion from MATSim not required as there are no changes in PT supply (schedule) expected currently;
 		// potentially revise this later; nk/dz, nov'17
 		//TODO: Optimize pt travel time query
 //		MatsimPtTravelTimes matsimPtTravelTimes = new MatsimPtTravelTimes(controler.getTripRouterProvider().get(), zoneFeatureMap, scenario.getNetwork());
-		acc.addTravelTimeForMode(TransportMode.car, matsimTravelTimes);
 //		acc.addTravelTimeForMode(TransportMode.pt, matsimTravelTimes); // use car times for now also, as pt travel times are too slow to compute, Nico Oct 17
 		
 		if (config.transit().isUseTransit() && Properties.get().main.implementation == Implementation.MUNICH) {

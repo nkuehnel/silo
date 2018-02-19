@@ -245,10 +245,15 @@ public final class Household {
 
     @Override
     public String toString() {
+        int homeZone = -1;
+        final Dwelling dwelling = Dwelling.getDwellingFromId(dwellingId);
+        if(dwelling != null) {
+            homeZone = dwelling.getZone();
+        }
         return  "Attributes of household " + hhId
             +"\nDwelling ID             " + dwellingId
             +"\nHousehold size          " + persons.size()
-            +"\nHome zone               " + Dwelling.getDwellingFromId(dwellingId).getZone();
+            +"\nHome zone               " + homeZone ;
     }
 
     public void setAutonomous (int autonomous) {
