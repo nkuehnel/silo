@@ -61,13 +61,13 @@
 		<defaultGoal>compiler:compile</defaultGoal>
 		<resources>
 			<resource>
-				<directory>core/src/main/resources</directory>
+				<directory>src/main/resources</directory>
 				<excludes>
 					<exclude>revision.txt</exclude>
 				</excludes>
 			</resource>
 			<resource>
-				<directory>core/src/main/resources</directory>
+				<directory>src/main/resources</directory>
 				<includes>
 					<include>revision.txt</include>
 				</includes>
