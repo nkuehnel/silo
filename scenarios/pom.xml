@@ -136,7 +136,11 @@
             </plugins>
         </pluginManagement>
     </build>
-
+    <scm>
+        <url>https://github.com/moeckel/silo</url>
+        <connection>scm:git:git://github.com/msmobility/silo.git</connection>
+        <developerConnection>scm:git:git@github.com:msmobility/silo.git</developerConnection>
+    </scm>
     <modules>
         <module>muc</module>
         <module>msp</module>
