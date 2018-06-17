@@ -178,14 +178,17 @@ public class SiloModelContainer {
         }
         ConstructionModel cons = new ConstructionModel(dataContainer, move, acc);
         EmploymentModel changeEmployment = new EmploymentModel(dataContainer, acc);
+        LOGGER.info("employment initialized");
+
         carOwnershipModel.initialize();
+        LOGGER.info("car ownership initialized");
         LeaveParentHhModel lph = new LeaveParentHhModel(dataContainer, move, createCarOwnershipModel);
         InOutMigration iomig = new InOutMigration(dataContainer, changeEmployment, move, createCarOwnershipModel, driversLicense);
         DemolitionModel demol = new DemolitionModel(dataContainer, move, iomig);
         MarriageModel marriage = new DefaultMarriageModel(dataContainer, move, iomig, createCarOwnershipModel);
 //        MarriageModel marriage = new DeferredAcceptanceMarriageModel(dataContainer, acc);
         DivorceModel divorce = new DivorceModel(dataContainer, move, createCarOwnershipModel);
-
+        LOGGER.info("model container ready");
         return new SiloModelContainer(iomig, cons, ddOverwrite, renov, demol,
                 prm, birth, birthday, death, marriage, divorce, lph, move, changeEmployment, changeSchoolUniv, driversLicense, acc,
                 carOwnershipModel, updateJobs, createCarOwnershipModel, transportModel);
