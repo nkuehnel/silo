@@ -160,7 +160,7 @@ public class SiloModelContainer {
         PricingModel prm = new PricingModel(dataContainer);
         UpdateJobs updateJobs = new UpdateJobs(dataContainer);
         ConstructionOverwrite ddOverwrite = new ConstructionOverwrite(dataContainer);
-
+        LOGGER.info("before carownerships");
         CreateCarOwnershipModel carOwnershipModel;
         CreateCarOwnershipModelSP createCarOwnershipModel = null;
         switch (Properties.get().main.implementation) {
