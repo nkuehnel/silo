@@ -4,7 +4,7 @@ jdk:
 script: mvn install -e -X -Dhdf5lib-absolute-path=`pwd`/lib/linux64/libjhdf5.so --fail-at-end --batch-mode -Dmatsim.preferLocalDtds=true
 #-Dmaven.test.redirectTestOutputToFile
 after_script:
-- python html2text.py target/site/surefire-report.html
+- python html2text.py silo/target/site/surefire-report.html
 env:
   global:
     - export MAVEN_OPTS="-Xmx2500m"
