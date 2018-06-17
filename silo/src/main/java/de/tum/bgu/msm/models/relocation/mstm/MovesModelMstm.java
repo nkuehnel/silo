@@ -8,7 +8,6 @@ package de.tum.bgu.msm.models.relocation.mstm;
 
 import cern.colt.matrix.tdouble.DoubleMatrix1D;
 import cern.colt.matrix.tdouble.DoubleMatrix2D;
-import com.pb.common.calculator.UtilityExpressionCalculator;
 import de.tum.bgu.msm.SiloUtil;
 import de.tum.bgu.msm.container.SiloDataContainer;
 import de.tum.bgu.msm.data.*;
@@ -19,8 +18,8 @@ import de.tum.bgu.msm.models.relocation.SelectDwellingJSCalculator;
 import de.tum.bgu.msm.models.relocation.SelectRegionJSCalculator;
 import de.tum.bgu.msm.properties.Properties;
 import de.tum.bgu.msm.util.matrices.Matrices;
+import de.tum.bgu.msm.utils.uec.Calculator;
 
-import java.io.File;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.*;
@@ -33,7 +32,7 @@ public class MovesModelMstm extends AbstractDefaultMovesModel {
 
     private SelectRegionJSCalculator regionCalculator;
 
-    private UtilityExpressionCalculator selectRegionModel;
+    private Calculator selectRegionModel;
     private MovesDMU selectRegionDmu;
     private DoubleMatrix2D zonalRacialComposition;
     private DoubleMatrix2D regionalRacialComposition;
@@ -149,12 +148,8 @@ public class MovesModelMstm extends AbstractDefaultMovesModel {
 
         int selRegModelSheetNumber = Properties.get().moves.selectRegionModelSheet;
         // initialize UEC
-        selectRegionModel = new UtilityExpressionCalculator(new File(uecFileName),
-                selRegModelSheetNumber,
-                dataSheetNumber,
-                SiloUtil.getRbHashMap(),
-                MovesDMU.class);
         selectRegionDmu = new MovesDMU();
+        selectRegionModel = new Calculator(uecFileName, dataSheetNumber, selRegModelSheetNumber, selectRegionDmu);
         numAltsSelReg = selectRegionModel.getNumberOfAlternatives();
 
         Reader reader = new InputStreamReader(this.getClass().getResourceAsStream("SelectRegionCalcMstm"));
@@ -210,7 +205,7 @@ public class MovesModelMstm extends AbstractDefaultMovesModel {
             selectRegionDmu.setIncomeGroup(incomeCategory.ordinal());
             for (Race race: Race.values()) {
                 selectRegionDmu.setRace(race);
-                double util[] = selectRegionModel.solve(selectRegionDmu.getDmuIndexValues(), selectRegionDmu, selRegAvail);
+                double util[] = selectRegionModel.calculate(logCalculationRegion);
                 for (int alternative = 0; alternative < numAltsSelReg; alternative++) {
                     utilityRegion[incomeCategory.ordinal()][race.getId()][alternative] = util[alternative];
 //                  cannot be switched on until the javascript SelectRegionCalc is updated with MSTM data
@@ -222,9 +217,6 @@ public class MovesModelMstm extends AbstractDefaultMovesModel {
 
 
                 }
-                if (logCalculationRegion)
-                    selectRegionModel.logAnswersArray(traceLogger, "Select-Region Model for HH of income group " +
-                            incomeCategory + " with race " + race);
             }
         }
         //second loop using the JS and maps
@@ -249,7 +241,7 @@ public class MovesModelMstm extends AbstractDefaultMovesModel {
             crimeRateByRegion.put(id , (float) (1f - ((MstmRegion) region).getCrimeRate()));  // invert utility, as lower crime rate has higher utility
         }
         for (IncomeCategory incomeCategory: IncomeCategory.values()) {
-            EnumMap<Race, Map<Integer, Double>> utilitiesByRaceRegionForThisIncome = new EnumMap(Race.class);
+            EnumMap<Race, Map<Integer, Double>> utilitiesByRaceRegionForThisIncome = new EnumMap<>(Race.class);
             Map<Integer, Float> priceUtilitiesByRegion = new HashMap<>();
             for (Race race: Race.values()) {
                 Map<Integer, Double> utilitiesByRegionForThisRaceIncome = new HashMap<>();

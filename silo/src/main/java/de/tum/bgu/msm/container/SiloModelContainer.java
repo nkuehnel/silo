@@ -148,14 +148,11 @@ public class SiloModelContainer {
 
         Accessibility acc = new Accessibility(dataContainer, travelTimes);
 
-        LOGGER.info(" before death model");
-
         DeathModel death = new DeathModel(dataContainer);
         BirthModel birth = new BirthModel(dataContainer);
         BirthdayModel birthday = new BirthdayModel(dataContainer);
         ChangeSchoolUnivModel changeSchoolUniv = new ChangeSchoolUnivModel(dataContainer);
         DriversLicense driversLicense = new DriversLicense(dataContainer);
-        LOGGER.info(" before moves model");
 
         //SummarizeData.summarizeAutoOwnershipByCounty(acc, jobData);
         MovesModelI move;
@@ -163,8 +160,6 @@ public class SiloModelContainer {
         PricingModel prm = new PricingModel(dataContainer);
         UpdateJobs updateJobs = new UpdateJobs(dataContainer);
         ConstructionOverwrite ddOverwrite = new ConstructionOverwrite(dataContainer);
-
-        LOGGER.info(" before carownership model");
 
         CreateCarOwnershipModel carOwnershipModel;
         CreateCarOwnershipModelSP createCarOwnershipModel = null;

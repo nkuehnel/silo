@@ -6,17 +6,20 @@ import com.pb.common.calculator.IndexValues;
 import de.tum.bgu.msm.data.HouseholdType;
 import de.tum.bgu.msm.data.Nationality;
 import de.tum.bgu.msm.data.Race;
+import de.tum.bgu.msm.utils.uec.DMU;
 import org.apache.log4j.Logger;
+
+import java.util.HashMap;
 
 /**
  * @author Rolf Moeckel (PB Albuquerque)
  * Created on Apr 4, 2011 in Albuquerque, NM
  *
  */
-public class MovesDMU {
+public class MovesDMU extends DMU {
 
     protected transient Logger logger = Logger.getLogger(MovesDMU.class);
-//    protected HashMap<String, Integer> methodIndexMap;
+    protected HashMap<String, Integer> methodIndexMap;
     
     // uec variables
     private int householdType;
@@ -131,11 +134,6 @@ public class MovesDMU {
             this.regionalShareForeigners = regionalNationalityShare;
         }
     }
-
-    public IndexValues getDmuIndexValues() {
-        return dmuIndex; 
-    }
-
 
     // DMU methods - define one of these for every @var in the control file.
 	public int getHouseholdType() {

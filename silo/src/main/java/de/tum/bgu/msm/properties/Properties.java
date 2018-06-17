@@ -34,8 +34,10 @@ public final class Properties {
     public final DemographicsProperties demographics;
     public final AccessibilityProperties accessibility;
     public final MovesProperties moves;
+    public final ResourceBundle bundle;
 
     private Properties(ResourceBundle bundle, Implementation implementation) {
+        this.bundle = bundle;
         main = new MainProperties(bundle, implementation);
         cblcm = new CblcmProperties(bundle);
         transportModel = new TransportModelPropertiesModule(bundle);
