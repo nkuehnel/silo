@@ -176,7 +176,10 @@ public class SiloModelContainer {
             default:
                 throw new RuntimeException("Models not defined for implementation " + Properties.get().main.implementation);
         }
+        LOGGER.info("before constr");
         ConstructionModel cons = new ConstructionModel(dataContainer, move, acc);
+        LOGGER.info("after constr");
+
         EmploymentModel changeEmployment = new EmploymentModel(dataContainer, acc);
         LOGGER.info("employment initialized");
 
