@@ -61,17 +61,10 @@
 		<defaultGoal>compiler:compile</defaultGoal>
 		<resources>
 			<resource>
-				<directory>src/main/resources</directory>
-				<excludes>
-					<exclude>revision.txt</exclude>
-				</excludes>
-			</resource>
-			<resource>
-				<directory>src/main/resources</directory>
+				<directory>${basedir}/src/main/resources</directory>
 				<includes>
-					<include>revision.txt</include>
+					<include>**/*</include>
 				</includes>
-				<filtering>true</filtering>
 			</resource>
 		</resources>
 		<plugins>
