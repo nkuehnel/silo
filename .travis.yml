@@ -3,6 +3,8 @@ jdk:
   - oraclejdk8
 script: mvn test -e -X -Dhdf5lib-absolute-path=`pwd`/lib/linux64/libjhdf5.so --fail-at-end --batch-mode -Dmatsim.preferLocalDtds=true
 #-Dmaven.test.redirectTestOutputToFile
+after_script:
+- python html2text.py target/site/surefire-report.html
 env:
   global:
     - export MAVEN_OPTS="-Xmx2500m"
