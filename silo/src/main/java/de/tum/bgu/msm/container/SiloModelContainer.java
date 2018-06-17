@@ -166,6 +166,7 @@ public class SiloModelContainer {
         switch (Properties.get().main.implementation) {
             case MARYLAND:
                 carOwnershipModel = new MaryLandCarOwnershipModel(dataContainer, acc);
+                LOGGER.info("before moves");
                 move = new MovesModelMstm(dataContainer, acc);
                 break;
             case MUNICH:

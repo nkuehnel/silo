@@ -45,7 +45,9 @@ public class MaryLandCarOwnershipModel extends AbstractModel implements CreateCa
 
     @Override
     public void initialize() {
+        logger.info("before reader");
         Reader reader = new InputStreamReader(this.getClass().getResourceAsStream("UpdateCarOwnershipMstmCalc"));
+        logger.info("after reader");
         MarlandCarOwnershipJSCalculator calculator = new MarlandCarOwnershipJSCalculator(reader);
 
         boolean logCalculation = Properties.get().demographics.logAutoOwnership;
