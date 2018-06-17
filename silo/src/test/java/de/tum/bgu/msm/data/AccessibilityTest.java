@@ -124,22 +124,22 @@ public class AccessibilityTest {
 
         try {
             new File("./silo/testoutput/").mkdirs();
-            MatrixVectorWriter writerZone2Region = new MatrixVectorWriter(new FileWriter("./testoutput/zone2regionTravelTimes.txt"));
+            MatrixVectorWriter writerZone2Region = new MatrixVectorWriter(new FileWriter("./test/output/zone2regionTravelTimes.txt"));
             writerZone2Region.print(new DoubleFormatter().toString(minTravelTimes));
             writerZone2Region.flush();
             writerZone2Region.close();
 
-            MatrixVectorWriter writerCar = new MatrixVectorWriter(new FileWriter("./testoutput/accessibilitiesCar.txt"));
+            MatrixVectorWriter writerCar = new MatrixVectorWriter(new FileWriter("./test/output/accessibilitiesCar.txt"));
             writerCar.printArray(accCar.toArray());
             writerCar.flush();
             writerCar.close();
 
-            MatrixVectorWriter writerTransit = new MatrixVectorWriter(new FileWriter("./testoutput/accessibilitiesTransit.txt"));
+            MatrixVectorWriter writerTransit = new MatrixVectorWriter(new FileWriter("./test/output/accessibilitiesTransit.txt"));
             writerTransit.printArray(accTransit.toArray());
             writerTransit.flush();
             writerTransit.close();
 
-            MatrixVectorWriter writerRegion = new MatrixVectorWriter(new FileWriter("./testoutput/accessibilitiesRegion.txt"));
+            MatrixVectorWriter writerRegion = new MatrixVectorWriter(new FileWriter("./test/output/accessibilitiesRegion.txt"));
             writerRegion.printArray(accRegions.toArray());
             writerRegion.flush();
             writerRegion.close();
